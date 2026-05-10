@@ -1,0 +1,44 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+
+// Rutas públicas (no requieren autenticación)
+const publicPaths = ['/login', '/register', '/api/auth/login', '/api/auth/register'];
+
+// Rutas solo para admin
+const adminPaths = ['/admin', '/api/admin'];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  // Permitir archivos estáticos
+  if (pathname.startsWith('/_next') || pathname.startsWith('/images') || pathname.startsWith('/uploads')) {
+    return NextResponse.next();
+  }
+  
+  // Verificar si es ruta pública
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
+  
+  // Obtener token
+  const token = request.cookies.get('token')?.value;
+  const user = token ? verifyToken(token) : null;
+  
+  // Verificar autenticación
+  if (!user) {
+    const url = new URL('/login', request.url);
+    return NextResponse.redirect(url);
+  }
+  
+  // Verificar acceso de admin para rutas admin
+  if (adminPaths.some(path => pathname.startsWith(path)) && user.role !== 'admin') {
+    return new NextResponse('No autorizado', { status: 403 });
+  }
+  
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|favicon.ico).*)'],
+};

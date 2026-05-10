@@ -24,14 +24,11 @@ async function main() {
       update: {},
       create: genre
     });
-    console.log(`✅ ${genre.name}`);
+    console.log('✅', genre.name);
   }
   console.log('🎉 Listo!');
 }
 
 main()
-  .catch(e => {
-    console.error('❌ Error:', e.message);
-    process.exit(1);
-  })
+  .catch(console.error)
   .finally(() => prisma.$disconnect());
