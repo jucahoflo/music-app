@@ -6,17 +6,21 @@ import { useState, useEffect } from 'react'
 export default function Menu() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState<{ username: string; role: string } | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [username, setUsername] = useState('')
   
   useEffect(() => {
+    // Cargar usuario sin bloquear
     fetch('/api/auth/me')
       .then(res => res.json())
-      .then(data => setUser(data))
-      .catch(() => setUser(null))
+      .then(data => {
+        setIsAdmin(data.role === 'admin')
+        setUsername(data.username || 'Invitado')
+      })
+      .catch(() => {})
   }, [])
   
-  const isAdmin = user?.role === 'admin'
-  const isAuthenticated = user && user.role !== 'guest'
+  const isActive = (path: string) => pathname === path
   
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -24,10 +28,6 @@ export default function Menu() {
   }
   
   if (pathname === '/login' || pathname === '/register') {
-    return null
-  }
-  
-  if (!isAuthenticated) {
     return null
   }
   
@@ -42,8 +42,8 @@ export default function Menu() {
         </svg>
       </button>
       
-      <nav className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 shadow-xl z-40 overflow-y-auto">
-        <div className="p-6">
+      <nav className={`fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 shadow-xl z-40 flex flex-col transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="p-6 flex-1">
           <div className="mb-8 text-center">
             <div className="text-4xl mb-2">🎵</div>
             <h2 className="text-xl font-bold text-white">MUSIC</h2>
@@ -51,33 +51,25 @@ export default function Menu() {
           </div>
           
           <div className="space-y-2">
-            <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+            <Link href="/" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isActive('/') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`} onClick={() => setIsOpen(false)}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
               Inicio
             </Link>
             
-            <Link href="/playlists" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
+            <Link href="/playlists" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${isActive('/playlists') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`} onClick={() => setIsOpen(false)}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
               Listas
             </Link>
             
             {isAdmin && (
               <>
-                <Link href="/upload" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
+                <Link href="/upload" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition" onClick={() => setIsOpen(false)}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                   Subir Canción
                 </Link>
                 
-                <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+                <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition" onClick={() => setIsOpen(false)}>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                   Administrador
                 </Link>
               </>
@@ -85,10 +77,12 @@ export default function Menu() {
           </div>
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-700">
-          <p className="text-sm text-gray-400">Conectado como</p>
-          <p className="text-white font-semibold">{user?.username || 'Usuario'}</p>
-          <p className="text-xs text-gray-500 mb-3">{isAdmin ? 'Administrador' : 'Usuario'}</p>
+        <div className="p-6 pt-0 border-t border-gray-700">
+          <div className="mb-3">
+            <p className="text-sm text-gray-400">Conectado como</p>
+            <p className="text-white font-semibold">{username}</p>
+            <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : 'Usuario'}</p>
+          </div>
           <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition text-sm">
             Cerrar Sesión
           </button>
