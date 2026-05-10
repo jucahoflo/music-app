@@ -11,7 +11,7 @@ async function getUserId() {
   const token = cookieStore.get('token')?.value;
   if (!token) return null;
   try {
-    const user = jwt.verify(token, SECRET);
+    const user = jwt.verify(token, SECRET) as { id: string };
     return user.id;
   } catch {
     return null;
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Error' }, { status: 500 });
   }
 }
