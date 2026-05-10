@@ -11,7 +11,7 @@ async function isAdmin() {
   const token = cookieStore.get('token')?.value;
   if (!token) return false;
   try {
-    const user = jwt.verify(token, SECRET) as { role: string };
+    const user = jwt.verify(token, SECRET);
     return user.role === 'admin';
   } catch {
     return false;
@@ -19,30 +19,49 @@ async function isAdmin() {
 }
 
 export async function GET() {
-  if (!(await isAdmin())) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
-  }
-
   try {
-    const totalVisits = await prisma.visit.count();
-    const visitsToday = await prisma.visit.count({
-      where: { visitedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }
-    });
-    const totalUsers = await prisma.user.count();
-    const newUsers = await prisma.user.count({
-      where: { createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } }
-    });
-    const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
-    const visitsByPage = await prisma.visit.groupBy({
-      by: ['path'],
-      _count: { path: true }
-    });
+    // Verificar admin
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+    }
+
+    // Obtener estadísticas
+    const [totalVisits, visitsToday, totalUsers, newUsers, users, visitsByPage] = await Promise.all([
+      prisma.visit.count(),
+      prisma.visit.count({
+        where: {
+          visitedAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0))
+          }
+        }
+      }),
+      prisma.user.count(),
+      prisma.user.count({
+        where: {
+          createdAt: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          }
+        }
+      }),
+      prisma.user.findMany({
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.visit.groupBy({
+        by: ['path'],
+        _count: { path: true }
+      })
+    ]);
 
     return NextResponse.json({
-      totalVisits, visitsToday, totalUsers, newUsers, users,
+      totalVisits,
+      visitsToday,
+      totalUsers,
+      newUsers,
+      users,
       visitsByPage: visitsByPage.map(v => ({ path: v.path, visits: v._count.path }))
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Error' }, { status: 500 });
+    console.error('Error en stats:', error);
+    return NextResponse.json({ error: 'Error al obtener estadísticas' }, { status: 500 });
   }
 }
