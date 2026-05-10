@@ -1,10 +1,11 @@
+cat > app/api/visit/route.ts << 'EOF'
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
-const SECRET = 'mi-secreto-super-seguro-2024';
+const prisma = new PrismaClient();
+const SECRET = process.env.NEXTAUTH_SECRET || 'mi-secreto-super-seguro-2024';
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -23,19 +24,16 @@ export async function POST(request: Request) {
     const { path: pagePath } = await request.json();
     const userId = await getUserId();
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-    const db = new Database(dbPath);
-    
-    const stmt = db.prepare(`
-      INSERT INTO Visit (id, path, userId)
-      VALUES (lower(hex(randomblob(16))), ?, ?)
-    `);
-    
-    stmt.run(pagePath, userId);
-    db.close();
+    await prisma.visit.create({
+      data: {
+        path: pagePath,
+        userId: userId || undefined,
+      }
+    });
     
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Error' }, { status: 500 });
   }
 }
+EOF

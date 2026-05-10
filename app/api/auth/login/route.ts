@@ -1,28 +1,28 @@
+cat > app/api/auth/login/route.ts << 'EOF'
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
-const SECRET = 'mi-secreto-super-seguro-2024';
+const prisma = new PrismaClient();
+const SECRET = process.env.NEXTAUTH_SECRET || 'mi-secreto-super-seguro-2024';
 
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
     
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-    const db = new Database(dbPath);
-    
-    const user = db.prepare('SELECT * FROM User WHERE username = ?').get(username);
-    db.close();
+    const user = await prisma.user.findUnique({
+      where: { username }
+    });
     
     if (!user) {
-      return NextResponse.json({ error: 'Usuario no existe' }, { status: 401 });
+      return NextResponse.json({ error: 'Usuario o contraseña incorrectos' }, { status: 401 });
     }
     
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
-      return NextResponse.json({ error: 'Contraseña incorrecta' }, { status: 401 });
+      return NextResponse.json({ error: 'Usuario o contraseña incorrectos' }, { status: 401 });
     }
     
     const token = jwt.sign(
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     
     return response;
   } catch (error) {
-    return NextResponse.json({ error: 'Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
   }
 }
+EOF
