@@ -8,6 +8,5 @@ export async function GET() {
   if (token) {
     return NextResponse.json({ username: 'jucahoflo', role: 'admin' });
   }
-  
   return NextResponse.json({ role: 'guest' });
 }
