@@ -5,8 +5,28 @@ export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   
-  if (token) {
-    return NextResponse.json({ username: 'jucahoflo', role: 'admin' });
+  // Usuario administrador
+  if (token === 'admin-token') {
+    return NextResponse.json({ 
+      username: 'jucahoflo', 
+      role: 'admin',
+      isAdmin: true 
+    });
   }
-  return NextResponse.json({ role: 'guest' });
+  
+  // Usuario normal registrado
+  if (token === 'user-token') {
+    return NextResponse.json({ 
+      username: 'usuario', 
+      role: 'user',
+      isAdmin: false 
+    });
+  }
+  
+  // Invitado no autenticado
+  return NextResponse.json({ 
+    username: 'Invitado', 
+    role: 'guest',
+    isAdmin: false 
+  });
 }
