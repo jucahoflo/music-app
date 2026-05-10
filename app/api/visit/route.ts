@@ -1,4 +1,3 @@
-cat > app/api/visit/route.ts << 'EOF'
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
@@ -33,7 +32,7 @@ export async function POST(request: Request) {
     
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Error' }, { status: 500 });
   }
 }
-EOF

@@ -1,4 +1,3 @@
-cat > app/api/songs/route.ts << 'EOF'
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { writeFile, mkdir } from 'fs/promises';
@@ -58,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Género no encontrado' }, { status: 400 });
     }
 
-    const song = await prisma.song.create({
+    await prisma.song.create({
       data: {
         title,
         artist,
@@ -69,8 +68,9 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ success: true, song });
+    return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Error al subir' }, { status: 500 });
   }
 }
@@ -85,4 +85,3 @@ export async function GET() {
     return NextResponse.json([], { status: 500 });
   }
 }
-EOF

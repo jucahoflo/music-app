@@ -1,4 +1,3 @@
-cat > app/api/auth/login/route.ts << 'EOF'
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
     
     return response;
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
   }
 }
-EOF
