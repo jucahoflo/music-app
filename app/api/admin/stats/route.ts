@@ -26,41 +26,23 @@ export async function GET() {
   try {
     const totalVisits = await prisma.visit.count();
     const visitsToday = await prisma.visit.count({
-      where: {
-        visitedAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
-      },
+      where: { visitedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }
     });
-
     const totalUsers = await prisma.user.count();
     const newUsers = await prisma.user.count({
-      where: {
-        createdAt: {
-          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
-        },
-      },
+      where: { createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } }
     });
-
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
     const visitsByPage = await prisma.visit.groupBy({
       by: ['path'],
-      _count: { path: true },
+      _count: { path: true }
     });
 
     return NextResponse.json({
-      totalVisits,
-      visitsToday,
-      totalUsers,
-      newUsers,
-      users,
-      visitsByPage: visitsByPage.map((v) => ({ path: v.path, visits: v._count.path })),
+      totalVisits, visitsToday, totalUsers, newUsers, users,
+      visitsByPage: visitsByPage.map(v => ({ path: v.path, visits: v._count.path }))
     });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Error al obtener estadísticas' }, { status: 500 });
+    return NextResponse.json({ error: 'Error' }, { status: 500 });
   }
 }

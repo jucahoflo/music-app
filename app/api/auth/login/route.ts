@@ -11,17 +11,15 @@ export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
     
-    const user = await prisma.user.findUnique({
-      where: { username }
-    });
+    const user = await prisma.user.findUnique({ where: { username } });
     
     if (!user) {
-      return NextResponse.json({ error: 'Usuario o contraseña incorrectos' }, { status: 401 });
+      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
     }
     
     const isValid = bcrypt.compareSync(password, user.password);
     if (!isValid) {
-      return NextResponse.json({ error: 'Usuario o contraseña incorrectos' }, { status: 401 });
+      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
     }
     
     const token = jwt.sign(
@@ -30,22 +28,11 @@ export async function POST(request: Request) {
       { expiresIn: '7d' }
     );
     
-    const response = NextResponse.json({ 
-      success: true, 
-      user: { username: user.username, role: user.role } 
-    });
-    
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+    const response = NextResponse.json({ success: true, user: { username: user.username, role: user.role } });
+    response.cookies.set('token', token, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 604800, path: '/' });
     
     return response;
   } catch (error) {
-    console.error(error);
     return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
   }
 }
