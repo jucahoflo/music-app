@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
 
@@ -24,31 +24,33 @@ interface Genre {
 
 export default function GenrePage() {
   const params = useParams()
+  const router = useRouter()
   const genreName = params.genreName as string
   
   const [genre, setGenre] = useState<Genre | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
   const [pdfWindow, setPdfWindow] = useState<Window | null>(null)
 
   useEffect(() => {
+    // Verificar si es admin
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(user => {
+        setIsAdmin(user.role === 'admin')
+      })
+      .catch(() => {})
+    
     fetch(`/api/genres/${genreName}`)
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
-          setError(data.error)
-        } else {
-          setGenre(data)
-        }
+        setGenre(data)
         setLoading(false)
       })
-      .catch(() => {
-        setError('Error al cargar el género')
-        setLoading(false)
-      })
+      .catch(() => setLoading(false))
   }, [genreName])
 
   const playSong = (song: Song) => {
@@ -75,12 +77,12 @@ export default function GenrePage() {
       }
       
       newAudio.onerror = () => {
-        alert(`Error: No se pudo reproducir ${song.title}. Archivo no encontrado.`)
+        alert(`Error: No se pudo reproducir ${song.title}`)
         setIsPlaying(false)
         setCurrentSong(null)
       }
     } catch (err) {
-      alert('Error al reproducir la canción')
+      alert('Error al reproducir')
     }
   }
 
@@ -96,6 +98,14 @@ export default function GenrePage() {
 
   const viewPdf = (pdfUrl: string) => {
     window.open(pdfUrl, '_blank')
+  }
+
+  const deleteSong = async (songId: string, songTitle: string) => {
+    if (!isAdmin) return
+    if (confirm(`¿Eliminar "${songTitle}"?`)) {
+      // Aquí iría la llamada a la API para eliminar
+      alert('Función de eliminar por implementar')
+    }
   }
 
   const colors: Record<string, string> = {
@@ -125,19 +135,7 @@ export default function GenrePage() {
     )
   }
 
-  if (error || !genre) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Menu />
-        <div className="lg:pl-64">
-          <div className="container mx-auto px-4 py-8">
-            <BackButton />
-            <div className="text-center text-red-500">{error || 'Género no encontrado'}</div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (!genre) return null
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,7 +150,17 @@ export default function GenrePage() {
           </div>
 
           {!genre.songs || genre.songs.length === 0 ? (
-            <p className="text-center text-gray-500">No hay canciones en este género</p>
+            <div className="text-center">
+              <p className="text-gray-500">No hay canciones en este género</p>
+              {isAdmin && (
+                <button
+                  onClick={() => router.push('/upload')}
+                  className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
+                >
+                  + Subir primera canción
+                </button>
+              )}
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {genre.songs.map((song) => (
@@ -166,27 +174,50 @@ export default function GenrePage() {
                     {currentSong?.id === song.id && isPlaying ? (
                       <button
                         onClick={stopSong}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
                       >
                         ⏹ Detener
                       </button>
                     ) : (
                       <button
                         onClick={() => playSong(song)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
                       >
                         ▶ Reproducir
                       </button>
                     )}
                     <button
                       onClick={() => viewPdf(song.pdfUrl)}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition"
                     >
-                      📄 Ver Letra
+                      📄 Letra
                     </button>
                   </div>
+                  {/* Botón eliminar - SOLO visible para admin */}
+                  {isAdmin && (
+                    <div className="px-4 pb-4">
+                      <button
+                        onClick={() => deleteSong(song.id, song.title)}
+                        className="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
+                      >
+                        🗑 Eliminar
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
+            </div>
+          )}
+          
+          {/* Botón subir canción - SOLO visible para admin */}
+          {isAdmin && genre.songs && genre.songs.length > 0 && (
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => router.push('/upload')}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+              >
+                + Subir nueva canción
+              </button>
             </div>
           )}
         </div>
