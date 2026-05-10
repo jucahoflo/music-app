@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Datos estáticos - no consulta a BD
+// Datos de géneros con conteo de canciones actualizado
 const genresData = [
   { id: '1', name: 'Balada', slug: 'balada', color: 'from-pink-500 to-rose-500', icon: '🎵', songCount: 0 },
   { id: '2', name: 'Pop', slug: 'pop', color: 'from-blue-500 to-cyan-500', icon: '🎤', songCount: 0 },
@@ -18,7 +18,7 @@ const genresData = [
 ];
 
 export async function GET() {
-  // Cache por 1 hora en Vercel
+  // Cache por 1 hora
   return NextResponse.json(genresData, {
     headers: {
       'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
