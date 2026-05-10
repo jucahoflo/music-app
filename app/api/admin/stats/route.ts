@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
-const SECRET = 'mi-secreto-super-seguro-2024';
+const prisma = new PrismaClient();
+const SECRET = process.env.NEXTAUTH_SECRET || 'mi-secreto-super-seguro-2024';
 
 async function isAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value;
   if (!token) return false;
   try {
-    const user = jwt.verify(token, SECRET);
+    const user = jwt.verify(token, SECRET) as { role: string };
     return user.role === 'admin';
   } catch {
     return false;
@@ -19,61 +19,48 @@ async function isAdmin() {
 }
 
 export async function GET() {
-  if (!await isAdmin()) {
+  if (!(await isAdmin())) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
-  
+
   try {
-    const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-    const db = new Database(dbPath);
-    
-    // Total de visitas
-    const totalVisits = db.prepare('SELECT COUNT(*) as count FROM Visit').get();
-    
-    // Visitas hoy
-    const visitsToday = db.prepare("SELECT COUNT(*) as count FROM Visit WHERE DATE(visitedAt) = DATE('now')").get();
-    
-    // Usuarios registrados
-    const totalUsers = db.prepare('SELECT COUNT(*) as count FROM User').get();
-    
-    // Usuarios últimos 7 días
-    const newUsers = db.prepare("SELECT COUNT(*) as count FROM User WHERE DATE(createdAt) >= DATE('now', '-7 days')").get();
-    
-    // Lista de usuarios
-    const users = db.prepare(`
-      SELECT username, email, role, createdAt, lastLogin 
-      FROM User 
-      ORDER BY createdAt DESC
-    `).all();
-    
-    // Visitas por página
-    const visitsByPage = db.prepare(`
-      SELECT path, COUNT(*) as visits 
-      FROM Visit 
-      WHERE path IS NOT NULL
-      GROUP BY path 
-      ORDER BY visits DESC
-    `).all();
-    
-    db.close();
-    
+    const totalVisits = await prisma.visit.count();
+    const visitsToday = await prisma.visit.count({
+      where: {
+        visitedAt: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+    });
+
+    const totalUsers = await prisma.user.count();
+    const newUsers = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      },
+    });
+
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const visitsByPage = await prisma.visit.groupBy({
+      by: ['path'],
+      _count: { path: true },
+    });
+
     return NextResponse.json({
-      totalVisits: totalVisits?.count || 0,
-      visitsToday: visitsToday?.count || 0,
-      totalUsers: totalUsers?.count || 0,
-      newUsers: newUsers?.count || 0,
-      users: users || [],
-      visitsByPage: visitsByPage || [],
+      totalVisits,
+      visitsToday,
+      totalUsers,
+      newUsers,
+      users,
+      visitsByPage: visitsByPage.map((v) => ({ path: v.path, visits: v._count.path })),
     });
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ 
-      totalVisits: 0,
-      visitsToday: 0,
-      totalUsers: 0,
-      newUsers: 0,
-      users: [],
-      visitsByPage: [] 
-    });
+    console.error(error);
+    return NextResponse.json({ error: 'Error al obtener estadísticas' }, { status: 500 });
   }
 }
