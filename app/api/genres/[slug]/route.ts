@@ -1,10 +1,32 @@
 import { NextResponse } from 'next/server';
 
+// Usa las rutas reales de tus archivos
 const songsData: Record<string, any[]> = {
-  salsa: [{ id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/uploads/mp3/EL PRESO.mp3', pdfUrl: '/uploads/pdf/EL PRESO.pdf' }],
+  salsa: [{ 
+    id: '1', 
+    title: 'EL PRESO', 
+    artist: 'FRUKO', 
+    duration: '4:30', 
+    mp3Url: '/uploads/mp3/1778342428932-EL PRESO.mp3', 
+    pdfUrl: '/uploads/pdf/1778342429011-EL PRESO.pdf' 
+  }],
   bailables: [
-    { id: '2', title: 'AGOBIO', artist: 'Combo', duration: '3:45', mp3Url: '/uploads/mp3/AGOBIO.mp3', pdfUrl: '/uploads/pdf/AGOBIO.pdf' },
-    { id: '3', title: 'CONFUNDIDO', artist: 'Combo', duration: '3:50', mp3Url: '/uploads/mp3/CONFUNDIDO.mp3', pdfUrl: '/uploads/pdf/CONFUNDIDO.pdf' }
+    { 
+      id: '2', 
+      title: 'AGOBIO', 
+      artist: 'Combo', 
+      duration: '3:45', 
+      mp3Url: '/uploads/mp3/1778351373525-AGOBIO.mp3', 
+      pdfUrl: '/uploads/pdf/1778351373601-AGOBIO.pdf' 
+    },
+    { 
+      id: '3', 
+      title: 'CONFUNDIDO', 
+      artist: 'Combo', 
+      duration: '3:50', 
+      mp3Url: '/uploads/mp3/1778360755859-Confundido.mp3', 
+      pdfUrl: '/uploads/pdf/1778360755888-CONFUNDIDO.pdf' 
+    }
   ]
 };
 
