@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useParams } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
 
@@ -24,26 +24,29 @@ interface Genre {
 
 export default function GenrePage() {
   const params = useParams()
-  const router = useRouter()
   const genreName = params.genreName as string
   
   const [genre, setGenre] = useState<Genre | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null)
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null)
   const [pdfWindow, setPdfWindow] = useState<Window | null>(null)
 
+  // Detener audio al desmontar el componente
   useEffect(() => {
-    // Verificar si es admin
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(user => {
-        setIsAdmin(user.role === 'admin')
-      })
-      .catch(() => {})
-    
+    return () => {
+      if (audioRef) {
+        audioRef.pause()
+        audioRef.currentTime = 0
+      }
+      if (pdfWindow && !pdfWindow.closed) {
+        pdfWindow.close()
+      }
+    }
+  }, [audioRef, pdfWindow])
+
+  useEffect(() => {
     fetch(`/api/genres/${genreName}`)
       .then(res => res.json())
       .then(data => {
@@ -53,59 +56,60 @@ export default function GenrePage() {
       .catch(() => setLoading(false))
   }, [genreName])
 
-  const playSong = (song: Song) => {
-    if (audio) {
-      audio.pause()
-      audio.currentTime = 0
+  // Función para detener cualquier canción en reproducción
+  const stopCurrentSong = () => {
+    if (audioRef) {
+      audioRef.pause()
+      audioRef.currentTime = 0
+      setIsPlaying(false)
+      setCurrentSong(null)
     }
-    if (pdfWindow && !pdfWindow.closed) pdfWindow.close()
-    
-    try {
-      const newAudio = new Audio(song.mp3Url)
-      setCurrentSong(song)
-      newAudio.play()
-      setIsPlaying(true)
-      setAudio(newAudio)
-      
-      const newPdfWindow = window.open(song.pdfUrl, '_blank')
-      setPdfWindow(newPdfWindow)
-      
-      newAudio.onended = () => {
-        setIsPlaying(false)
-        setCurrentSong(null)
-        if (newPdfWindow && !newPdfWindow.closed) newPdfWindow.close()
-      }
-      
-      newAudio.onerror = () => {
-        alert(`Error: No se pudo reproducir ${song.title}`)
-        setIsPlaying(false)
-        setCurrentSong(null)
-      }
-    } catch (err) {
-      alert('Error al reproducir')
+    if (pdfWindow && !pdfWindow.closed) {
+      pdfWindow.close()
+      setPdfWindow(null)
     }
   }
 
-  const stopSong = () => {
-    if (audio) {
-      audio.pause()
-      audio.currentTime = 0
+  const playSong = (song: Song) => {
+    // Si ya está sonando la misma canción, la detenemos
+    if (currentSong?.id === song.id && isPlaying) {
+      stopCurrentSong()
+      return
     }
-    setIsPlaying(false)
-    setCurrentSong(null)
-    if (pdfWindow && !pdfWindow.closed) pdfWindow.close()
+    
+    // Detener cualquier canción actual
+    stopCurrentSong()
+    
+    // Crear nuevo audio
+    const newAudio = new Audio(song.mp3Url)
+    setCurrentSong(song)
+    newAudio.play()
+    setIsPlaying(true)
+    setAudioRef(newAudio)
+    
+    // Abrir PDF automáticamente
+    const newPdfWindow = window.open(song.pdfUrl, '_blank')
+    setPdfWindow(newPdfWindow)
+    
+    // Cuando termine la canción, limpiar
+    newAudio.onended = () => {
+      setIsPlaying(false)
+      setCurrentSong(null)
+      setAudioRef(null)
+      if (newPdfWindow && !newPdfWindow.closed) {
+        newPdfWindow.close()
+        setPdfWindow(null)
+      }
+    }
+    
+    newAudio.onerror = () => {
+      alert(`Error: No se pudo reproducir ${song.title}`)
+      stopCurrentSong()
+    }
   }
 
   const viewPdf = (pdfUrl: string) => {
     window.open(pdfUrl, '_blank')
-  }
-
-  const deleteSong = async (songId: string, songTitle: string) => {
-    if (!isAdmin) return
-    if (confirm(`¿Eliminar "${songTitle}"?`)) {
-      // Aquí iría la llamada a la API para eliminar
-      alert('Función de eliminar por implementar')
-    }
   }
 
   const colors: Record<string, string> = {
@@ -144,23 +148,13 @@ export default function GenrePage() {
         <div className="container mx-auto px-4 py-8">
           <BackButton />
           
-          <div className={`bg-gradient-to-r ${colors[genre.name] || 'from-gray-500 to-gray-600'} rounded-2xl p-8 mb-8 text-white`}>
+          <div className={`bg-gradient-to-r ${colors[genre.name]} rounded-2xl p-8 mb-8 text-white`}>
             <h1 className="text-4xl font-bold mb-2">{genre.name}</h1>
             <p>{genre.songs?.length || 0} canciones</p>
           </div>
 
           {!genre.songs || genre.songs.length === 0 ? (
-            <div className="text-center">
-              <p className="text-gray-500">No hay canciones en este género</p>
-              {isAdmin && (
-                <button
-                  onClick={() => router.push('/upload')}
-                  className="mt-4 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition"
-                >
-                  + Subir primera canción
-                </button>
-              )}
-            </div>
+            <p className="text-center text-gray-500">No hay canciones en este género</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {genre.songs.map((song) => (
@@ -171,66 +165,42 @@ export default function GenrePage() {
                     <p className="text-gray-400 text-sm mt-1">{song.duration || '3:00'}</p>
                   </div>
                   <div className="p-4 pt-0 flex gap-2">
-                    {currentSong?.id === song.id && isPlaying ? (
-                      <button
-                        onClick={stopSong}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
-                      >
-                        ⏹ Detener
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => playSong(song)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
-                      >
-                        ▶ Reproducir
-                      </button>
-                    )}
+                    <button
+                      onClick={() => playSong(song)}
+                      className={`flex-1 py-2 rounded-lg transition flex items-center justify-center gap-2 ${
+                        currentSong?.id === song.id && isPlaying
+                          ? 'bg-red-600 hover:bg-red-700 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {currentSong?.id === song.id && isPlaying ? '⏹ Detener' : '▶ Reproducir'}
+                    </button>
                     <button
                       onClick={() => viewPdf(song.pdfUrl)}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition"
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
                     >
                       📄 Letra
                     </button>
                   </div>
-                  {/* Botón eliminar - SOLO visible para admin */}
-                  {isAdmin && (
-                    <div className="px-4 pb-4">
-                      <button
-                        onClick={() => deleteSong(song.id, song.title)}
-                        className="w-full bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
-                      >
-                        🗑 Eliminar
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
-            </div>
-          )}
-          
-          {/* Botón subir canción - SOLO visible para admin */}
-          {isAdmin && genre.songs && genre.songs.length > 0 && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => router.push('/upload')}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-              >
-                + Subir nueva canción
-              </button>
             </div>
           )}
         </div>
       </div>
       
+      {/* Reproductor flotante */}
       {currentSong && isPlaying && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 shadow-lg z-50">
           <div className="container mx-auto flex justify-between items-center">
             <div>
-              <span className="font-bold">{currentSong.title}</span>
+              <span className="font-bold">🎵 {currentSong.title}</span>
               <span className="text-gray-400 ml-2">- {currentSong.artist}</span>
             </div>
-            <button onClick={stopSong} className="bg-red-600 px-4 py-2 rounded-lg">
+            <button
+              onClick={stopCurrentSong}
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition"
+            >
               Detener
             </button>
           </div>
