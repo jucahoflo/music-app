@@ -22,13 +22,11 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
       
-      const data = await res.json();
-      
       if (res.ok) {
         router.push('/');
         router.refresh();
       } else {
-        setError(data.error || 'Usuario o contraseña incorrectos');
+        setError('Usuario o contraseña incorrectos');
         setLoading(false);
       }
     } catch (error) {

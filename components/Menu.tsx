@@ -7,44 +7,41 @@ export default function Menu() {
   const pathname = usePathname()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [username, setUsername] = useState('')
+  const [user, setUser] = useState<{ username: string; role: string; isAdmin: boolean }>({
+    username: 'Invitado',
+    role: 'guest',
+    isAdmin: false
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Leer cookies directamente
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
-    
-    const userRole = getCookie('user-role');
-    const userName = getCookie('username');
-    
-    setIsAdmin(userRole === 'admin');
-    setUsername(userName || 'Invitado');
-    setLoading(false);
-  }, []);
+    const getUser = async () => {
+      try {
+        const res = await fetch('/api/auth/me')
+        const data = await res.json()
+        setUser({
+          username: data.username || 'Invitado',
+          role: data.role || 'guest',
+          isAdmin: data.role === 'admin'
+        })
+      } catch (error) {
+        console.error('Error al obtener usuario:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    getUser()
+  }, [])
 
   const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/login');
-    router.refresh();
-  };
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+    router.refresh()
+  }
   
   // No mostrar menú en login/register
   if (pathname === '/login' || pathname === '/register') {
-    return null;
-  }
-  
-  if (loading) {
-    return (
-      <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-gray-900 to-gray-800 z-40">
-        <div className="p-6 text-white">Cargando...</div>
-      </div>
-    );
+    return null
   }
   
   return (
@@ -77,7 +74,8 @@ export default function Menu() {
               Listas
             </Link>
             
-            {isAdmin && (
+            {/* Opciones solo para administrador */}
+            {user.isAdmin && (
               <>
                 <Link href="/upload" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition" onClick={() => setIsOpen(false)}>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
@@ -96,8 +94,10 @@ export default function Menu() {
         <div className="p-6 pt-0 border-t border-gray-700">
           <div className="mb-3">
             <p className="text-sm text-gray-400">Conectado como</p>
-            <p className="text-white font-semibold">{username}</p>
-            <p className="text-xs text-gray-500">{isAdmin ? 'Administrador' : 'Usuario'}</p>
+            <p className="text-white font-semibold">{user.username}</p>
+            <p className="text-xs text-gray-500">
+              {user.isAdmin ? 'Administrador' : user.role === 'user' ? 'Usuario' : 'Invitado'}
+            </p>
           </div>
           <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition text-sm">
             Cerrar Sesión

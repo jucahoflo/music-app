@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
 
+// Usuario administrador fijo
+const ADMIN_USER = {
+  username: 'jucahoflo',
+  password: '123456',
+  role: 'admin'
+};
+
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
     
     // Verificar si es el administrador
-    const isAdmin = (username === 'jucahoflo' && password === '123456');
+    const isAdmin = (username === ADMIN_USER.username && password === ADMIN_USER.password);
     
-    // Respuesta con el rol
+    // Crear respuesta con cookie
     const response = NextResponse.json({ 
       success: true, 
       user: { 
@@ -16,10 +23,10 @@ export async function POST(request: Request) {
       } 
     });
     
-    // Guardar el rol en una cookie simple
+    // Guardar rol en cookie
     response.cookies.set('user-role', isAdmin ? 'admin' : 'user', {
       httpOnly: false,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
@@ -27,7 +34,7 @@ export async function POST(request: Request) {
     
     response.cookies.set('username', username, {
       httpOnly: false,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
@@ -35,6 +42,6 @@ export async function POST(request: Request) {
     
     return response;
   } catch (error) {
-    return NextResponse.json({ error: 'Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
   }
 }
