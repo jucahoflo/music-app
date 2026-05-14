@@ -50,7 +50,7 @@ export default function UploadPage() {
         setTimeout(() => {
           router.push('/')
           router.refresh()
-        }, 1500)
+        }, 2000)
       } else {
         setError(data.error || 'Error al subir la canción')
       }
