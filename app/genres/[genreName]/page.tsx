@@ -35,7 +35,6 @@ export default function GenrePage() {
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null)
   const [pdfWindow, setPdfWindow] = useState<Window | null>(null)
 
-  // Formatear tiempo (segundos a mm:ss)
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00'
     const mins = Math.floor(seconds / 60)
@@ -43,7 +42,6 @@ export default function GenrePage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Calcular porcentaje de progreso
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   useEffect(() => {
@@ -56,7 +54,6 @@ export default function GenrePage() {
       .catch(() => setLoading(false))
   }, [genreName])
 
-  // Limpiar al desmontar
   useEffect(() => {
     return () => {
       if (audioRef) {
@@ -76,6 +73,7 @@ export default function GenrePage() {
       setIsPlaying(false)
       setCurrentSong(null)
       setCurrentTime(0)
+      setDuration(0)
     }
     if (pdfWindow && !pdfWindow.closed) {
       pdfWindow.close()
@@ -84,22 +82,19 @@ export default function GenrePage() {
   }
 
   const playSong = (song: Song) => {
-    // Si ya está sonando la misma canción, la detenemos
     if (currentSong?.id === song.id && isPlaying) {
       stopCurrentSong()
       return
     }
     
-    // Detener cualquier canción actual
     stopCurrentSong()
     
-    // Crear nuevo audio
     const newAudio = new Audio(song.mp3Url)
     setCurrentSong(song)
     setAudioRef(newAudio)
     setCurrentTime(0)
+    setDuration(0)
     
-    // Actualizar tiempo durante reproducción
     newAudio.addEventListener('timeupdate', () => {
       setCurrentTime(newAudio.currentTime)
     })
@@ -121,12 +116,11 @@ export default function GenrePage() {
     newAudio.play()
     setIsPlaying(true)
     
-    // Abrir PDF automáticamente
     const newPdfWindow = window.open(song.pdfUrl, '_blank')
     setPdfWindow(newPdfWindow)
     
     newAudio.onerror = () => {
-      alert(`Error: No se pudo reproducir ${song.title}`)
+      alert(`Error: No se pudo reproducir ${song.title}. Verifica que el archivo existe.`)
       stopCurrentSong()
     }
   }
@@ -222,11 +216,9 @@ export default function GenrePage() {
         </div>
       </div>
       
-      {/* Reproductor flotante futurista */}
       {currentSong && isPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
-            {/* Información de la canción */}
             <div className="flex justify-between items-center mb-2">
               <div>
                 <span className="font-bold text-lg">{currentSong.title}</span>
@@ -237,7 +229,6 @@ export default function GenrePage() {
               </div>
             </div>
             
-            {/* Barra de progreso futurista */}
             <div 
               className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden"
               onClick={seekTo}
@@ -245,27 +236,22 @@ export default function GenrePage() {
               <div 
                 className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100"
                 style={{ width: `${progressPercent}%` }}
-              >
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </div>
+              />
             </div>
             
-            {/* Controles */}
             <div className="flex justify-center gap-4 mt-3">
               <button
                 onClick={stopCurrentSong}
-                className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition flex items-center gap-2"
+                className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition"
               >
                 ⏹ Detener
               </button>
-              {currentSong.pdfUrl && (
-                <button
-                  onClick={() => viewPdf(currentSong.pdfUrl)}
-                  className="bg-purple-600 hover:bg-purple-700 px-6 py-1.5 rounded-full text-sm transition flex items-center gap-2"
-                >
-                  📄 Ver Letra
-                </button>
-              )}
+              <button
+                onClick={() => viewPdf(currentSong.pdfUrl)}
+                className="bg-purple-600 hover:bg-purple-700 px-6 py-1.5 rounded-full text-sm transition"
+              >
+                📄 Ver Letra
+              </button>
             </div>
           </div>
         </div>

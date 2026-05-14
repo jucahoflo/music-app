@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 
-// Usa las rutas reales de tus archivos
+// Rutas CORRECTAS de los archivos (sin espacios en el nombre del archivo para URL)
 const songsData: Record<string, any[]> = {
   salsa: [{ 
     id: '1', 
     title: 'EL PRESO', 
     artist: 'FRUKO', 
     duration: '4:30', 
-    mp3Url: '/uploads/mp3/1778342428932-EL PRESO.mp3', 
-    pdfUrl: '/uploads/pdf/1778342429011-EL PRESO.pdf' 
+    mp3Url: '/uploads/mp3/1778342428932-EL%20PRESO.mp3', 
+    pdfUrl: '/uploads/pdf/1778342429011-EL%20PRESO.pdf' 
   }],
   bailables: [
     { 
