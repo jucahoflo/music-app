@@ -22,6 +22,7 @@ interface Genre {
   songs: Song[]
 }
 
+// Audio global - declarado fuera del componente
 let globalAudio: HTMLAudioElement | null = null
 let globalPdfWindow: Window | null = null
 
@@ -93,14 +94,14 @@ export default function GenrePage() {
       setDuration(globalAudio.duration || 0)
       setCurrentTime(globalAudio.currentTime || 0)
       
+      const audioElement = globalAudio
       const updateTime = () => {
-        if (globalAudio) {
-          setCurrentTime(globalAudio.currentTime)
+        if (audioElement) {
+          setCurrentTime(audioElement.currentTime)
         }
       }
-      const audioRef = globalAudio
-      audioRef.addEventListener('timeupdate', updateTime)
-      return () => audioRef.removeEventListener('timeupdate', updateTime)
+      audioElement.addEventListener('timeupdate', updateTime)
+      return () => audioElement.removeEventListener('timeupdate', updateTime)
     }
   }, [])
 
@@ -147,15 +148,16 @@ export default function GenrePage() {
       globalPdfWindow = null
     }
     
-    globalAudio = new Audio()
-    globalAudio.src = song.mp3Url
-    globalAudio.volume = volume
-    globalAudio.setAttribute('data-song-id', song.id)
-    globalAudio.setAttribute('data-song-title', song.title)
-    globalAudio.setAttribute('data-song-artist', song.artist)
-    globalAudio.setAttribute('data-song-duration', song.duration)
-    globalAudio.setAttribute('data-song-pdf', song.pdfUrl)
+    const audio = new Audio()
+    audio.src = song.mp3Url
+    audio.volume = volume
+    audio.setAttribute('data-song-id', song.id)
+    audio.setAttribute('data-song-title', song.title)
+    audio.setAttribute('data-song-artist', song.artist)
+    audio.setAttribute('data-song-duration', song.duration)
+    audio.setAttribute('data-song-pdf', song.pdfUrl)
     
+    globalAudio = audio
     setCurrentSong(song)
     setCurrentTime(0)
     setDuration(0)
@@ -173,11 +175,13 @@ export default function GenrePage() {
         setCurrentTime(globalAudio.currentTime)
       }
     }
+    
     const onLoadedMetadata = () => {
       if (globalAudio) {
         setDuration(globalAudio.duration)
       }
     }
+    
     const onEnded = () => {
       setIsPlaying(false)
       setCurrentSong(null)
@@ -186,15 +190,16 @@ export default function GenrePage() {
       globalAudio = null
     }
     
-    const audioRef = globalAudio
-    audioRef.addEventListener('canplay', onCanPlay)
-    audioRef.addEventListener('timeupdate', onTimeUpdate)
-    audioRef.addEventListener('loadedmetadata', onLoadedMetadata)
-    audioRef.addEventListener('ended', onEnded)
+    audio.addEventListener('canplay', onCanPlay)
+    audio.addEventListener('timeupdate', onTimeUpdate)
+    audio.addEventListener('loadedmetadata', onLoadedMetadata)
+    audio.addEventListener('ended', onEnded)
     
-    audioRef.load()
+    audio.load()
     
-    globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    if (song.pdfUrl && song.pdfUrl !== '#') {
+      globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    }
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
