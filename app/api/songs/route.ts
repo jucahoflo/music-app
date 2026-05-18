@@ -27,23 +27,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan archivos' }, { status: 400 });
     }
 
-    // Crear carpeta del género si no existe
-    await mkdir(`public/mp3/${genreSlug}`, { recursive: true });
-    await mkdir(`public/pdf/${genreSlug}`, { recursive: true });
-
-    // Limpiar nombre del archivo
-    const cleanName = (name: string) => name.replace(/\s/g, '_').replace(/[^\w\-_.]/g, '');
-    const baseName = cleanName(mp3File.name.replace('.mp3', ''));
+    // Crear directorios
+    await mkdir('public/uploads/mp3', { recursive: true });
+    await mkdir('public/uploads/pdf', { recursive: true });
+    await mkdir('public/mp3', { recursive: true });
+    await mkdir('public/pdf', { recursive: true });
 
     // Guardar MP3
-    const mp3FileName = `${baseName}.mp3`;
+    const mp3FileName = `${Date.now()}-${mp3File.name.replace(/\s/g, '_')}`;
     const mp3Buffer = Buffer.from(await mp3File.arrayBuffer());
-    await writeFile(path.join(process.cwd(), `public/mp3/${genreSlug}`, mp3FileName), mp3Buffer);
+    await writeFile(path.join(process.cwd(), 'public/uploads/mp3', mp3FileName), mp3Buffer);
+    await writeFile(path.join(process.cwd(), 'public/mp3', mp3FileName), mp3Buffer);
 
     // Guardar PDF
-    const pdfFileName = `${baseName}.pdf`;
+    const pdfFileName = `${Date.now()}-${pdfFile.name.replace(/\s/g, '_')}`;
     const pdfBuffer = Buffer.from(await pdfFile.arrayBuffer());
-    await writeFile(path.join(process.cwd(), `public/pdf/${genreSlug}`, pdfFileName), pdfBuffer);
+    await writeFile(path.join(process.cwd(), 'public/uploads/pdf', pdfFileName), pdfBuffer);
+    await writeFile(path.join(process.cwd(), 'public/pdf', pdfFileName), pdfBuffer);
 
     return NextResponse.json({ 
       success: true, 
@@ -52,12 +52,17 @@ export async function POST(request: Request) {
         title,
         artist,
         genre: genreSlug,
-        mp3Url: `/mp3/${genreSlug}/${mp3FileName}`,
-        pdfUrl: `/pdf/${genreSlug}/${pdfFileName}`
+        mp3Url: `/mp3/${mp3FileName}`,
+        pdfUrl: `/pdf/${pdfFileName}`
       }
     });
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ error: 'Error al subir: ' + error.message }, { status: 500 });
+  } catch (err) {
+    console.error('Error:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+    return NextResponse.json({ error: 'Error al subir: ' + errorMessage }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({ message: 'API funcionando' });
 }
