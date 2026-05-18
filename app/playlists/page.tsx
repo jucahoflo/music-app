@@ -15,7 +15,6 @@ interface Song {
   pdfUrl: string
 }
 
-// Audio global para persistencia
 let globalAudio: HTMLAudioElement | null = null
 let globalPdfWindow: Window | null = null
 
@@ -28,8 +27,6 @@ export default function PlaylistsPage() {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.7)
   const [animationBars, setAnimationBars] = useState<number[]>(Array(30).fill(5))
-  const [currentIndex, setCurrentIndex] = useState(-1)
-  const [autoPlay, setAutoPlay] = useState(true)
   
   const animationRef = useRef<number>()
 
@@ -42,7 +39,6 @@ export default function PlaylistsPage() {
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
-  // Animación del ecualizador
   useEffect(() => {
     if (isPlaying) {
       const animate = () => {
@@ -62,12 +58,12 @@ export default function PlaylistsPage() {
   // Restaurar audio al cargar
   useEffect(() => {
     if (globalAudio && globalAudio.src && !globalAudio.paused) {
-      const songId = globalAudio.getAttribute('data-song-id') || ''
-      const songTitle = globalAudio.getAttribute('data-song-title') || ''
-      const songArtist = globalAudio.getAttribute('data-song-artist') || ''
-      const songDuration = globalAudio.getAttribute('data-song-duration') || ''
-      const songPdfUrl = globalAudio.getAttribute('data-song-pdf') || ''
-      const songIndex = parseInt(globalAudio.getAttribute('data-song-index') || '-1')
+      const audio = globalAudio
+      const songId = audio.getAttribute('data-song-id') || ''
+      const songTitle = audio.getAttribute('data-song-title') || ''
+      const songArtist = audio.getAttribute('data-song-artist') || ''
+      const songDuration = audio.getAttribute('data-song-duration') || ''
+      const songPdfUrl = audio.getAttribute('data-song-pdf') || ''
       
       setCurrentSong({
         id: songId,
@@ -76,22 +72,21 @@ export default function PlaylistsPage() {
         duration: songDuration,
         genreName: '',
         genreSlug: '',
-        mp3Url: globalAudio.src,
+        mp3Url: audio.src,
         pdfUrl: songPdfUrl
       })
-      setCurrentIndex(songIndex)
       setIsPlaying(true)
-      setDuration(globalAudio.duration || 0)
-      setCurrentTime(globalAudio.currentTime || 0)
+      setDuration(audio.duration || 0)
+      setCurrentTime(audio.currentTime || 0)
       
-      const updateTime = () => setCurrentTime(globalAudio.currentTime)
-      globalAudio.addEventListener('timeupdate', updateTime)
-      return () => globalAudio.removeEventListener('timeupdate', updateTime)
+      const updateTime = () => setCurrentTime(audio.currentTime)
+      audio.addEventListener('timeupdate', updateTime)
+      return () => audio.removeEventListener('timeupdate', updateTime)
     }
   }, [])
 
   useEffect(() => {
-    const fetchAllSongs = async () => {
+    const fetchSongs = async () => {
       try {
         const genresRes = await fetch('/api/genres')
         const genres = await genresRes.json()
@@ -117,7 +112,7 @@ export default function PlaylistsPage() {
         setLoading(false)
       }
     }
-    fetchAllSongs()
+    fetchSongs()
   }, [])
 
   const stopCurrentSong = () => {
@@ -131,74 +126,68 @@ export default function PlaylistsPage() {
     setCurrentSong(null)
     setCurrentTime(0)
     setDuration(0)
-    setCurrentIndex(-1)
     if (globalPdfWindow && !globalPdfWindow.closed) {
       globalPdfWindow.close()
       globalPdfWindow = null
     }
   }
 
-  const playSong = (song: Song, index: number) => {
-    if (currentIndex === index && isPlaying) {
+  const playSong = (song: Song) => {
+    if (currentSong?.id === song.id && isPlaying) {
       stopCurrentSong()
       return
     }
     
-    if (globalAudio) {
-      globalAudio.pause()
-      globalAudio.currentTime = 0
-      globalAudio = null
-    }
     if (globalPdfWindow && !globalPdfWindow.closed) {
       globalPdfWindow.close()
       globalPdfWindow = null
     }
     
-    globalAudio = new Audio()
-    globalAudio.src = song.mp3Url
-    globalAudio.volume = volume
-    globalAudio.setAttribute('data-song-id', song.id)
-    globalAudio.setAttribute('data-song-title', song.title)
-    globalAudio.setAttribute('data-song-artist', song.artist)
-    globalAudio.setAttribute('data-song-duration', song.duration)
-    globalAudio.setAttribute('data-song-pdf', song.pdfUrl)
-    globalAudio.setAttribute('data-song-index', index.toString())
+    const audio = new Audio()
+    audio.src = song.mp3Url
+    audio.volume = volume
+    audio.setAttribute('data-song-id', song.id)
+    audio.setAttribute('data-song-title', song.title)
+    audio.setAttribute('data-song-artist', song.artist)
+    audio.setAttribute('data-song-duration', song.duration)
+    audio.setAttribute('data-song-pdf', song.pdfUrl)
     
     setCurrentSong(song)
-    setCurrentIndex(index)
     setCurrentTime(0)
     setDuration(0)
     
     const onCanPlay = () => {
-      globalAudio.play()
+      audio.play()
         .then(() => setIsPlaying(true))
         .catch(err => console.error('Error:', err))
     }
     
-    const onTimeUpdate = () => setCurrentTime(globalAudio.currentTime)
-    const onLoadedMetadata = () => setDuration(globalAudio.duration)
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onLoadedMetadata = () => setDuration(audio.duration)
     const onEnded = () => {
-      if (autoPlay && currentIndex < songs.length - 1) {
-        const nextIndex = currentIndex + 1
-        playSong(songs[nextIndex], nextIndex)
-      } else {
-        setIsPlaying(false)
-        setCurrentSong(null)
-        setCurrentIndex(-1)
-        setCurrentTime(0)
-        if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
-        globalAudio = null
-      }
+      setIsPlaying(false)
+      setCurrentSong(null)
+      setCurrentTime(0)
+      if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
     }
     
-    globalAudio.addEventListener('canplay', onCanPlay)
-    globalAudio.addEventListener('timeupdate', onTimeUpdate)
-    globalAudio.addEventListener('loadedmetadata', onLoadedMetadata)
-    globalAudio.addEventListener('ended', onEnded)
+    audio.addEventListener('canplay', onCanPlay)
+    audio.addEventListener('timeupdate', onTimeUpdate)
+    audio.addEventListener('loadedmetadata', onLoadedMetadata)
+    audio.addEventListener('ended', onEnded)
     
-    globalAudio.load()
+    audio.load()
     
-    globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    // Limpiar audio anterior
+    if (globalAudio) {
+      globalAudio.pause()
+      globalAudio.src = ''
+    }
+    globalAudio = audio
+    
+    if (song.pdfUrl && song.pdfUrl !== '#') {
+      globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    }
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -238,21 +227,11 @@ export default function PlaylistsPage() {
         <div className="container mx-auto px-4 py-8">
           <BackButton />
           
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">📋 Lista de Reproducción</h1>
-            <button
-              onClick={() => setAutoPlay(!autoPlay)}
-              className={`px-4 py-2 rounded-lg transition ${
-                autoPlay ? 'bg-green-600 text-white' : 'bg-gray-600 text-white'
-              }`}
-            >
-              {autoPlay ? '🔁 Auto-play ON' : '⏹ Auto-play OFF'}
-            </button>
-          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-8">📋 Lista de Canciones</h1>
 
           {songs.length === 0 ? (
             <div className="bg-white rounded-xl shadow-md p-8 text-center">
-              <p className="text-gray-500 text-lg">No hay canciones disponibles</p>
+              <p className="text-gray-500 text-lg">No hay canciones subidas aún</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -270,7 +249,7 @@ export default function PlaylistsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {songs.map((song, index) => (
-                      <tr key={song.id} className={`hover:bg-gray-50 transition ${currentIndex === index && isPlaying ? 'bg-blue-50' : ''}`}>
+                      <tr key={song.id} className="hover:bg-gray-50 transition">
                         <td className="px-6 py-4 text-gray-500">{index + 1}</td>
                         <td className="px-6 py-4 font-medium text-gray-900">{song.title}</td>
                         <td className="px-6 py-4 text-gray-600">{song.artist}</td>
@@ -286,24 +265,24 @@ export default function PlaylistsPage() {
                         <td className="px-6 py-4">
                           <div className="flex gap-2">
                             <button
-                              onClick={() => playSong(song, index)}
-                              className={`px-3 py-1 rounded-lg text-sm transition ${
-                                currentIndex === index && isPlaying
+                              onClick={() => playSong(song)}
+                              className={`px-3 py-1 rounded text-sm transition ${
+                                currentSong?.id === song.id && isPlaying
                                   ? 'bg-red-600 hover:bg-red-700 text-white'
                                   : 'bg-blue-600 hover:bg-blue-700 text-white'
                               }`}
                             >
-                              {currentIndex === index && isPlaying ? '⏹ Detener' : '▶ Reproducir'}
+                              {currentSong?.id === song.id && isPlaying ? '⏹' : '▶'}
                             </button>
                             <button
                               onClick={() => viewPdf(song.pdfUrl)}
-                              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition"
+                              className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition"
                             >
-                              📄 Letra
+                              📄
                             </button>
                           </div>
                         </td>
-                      </tr>
+                       </tr>
                     ))}
                   </tbody>
                 </table>
@@ -313,7 +292,6 @@ export default function PlaylistsPage() {
         </div>
       </div>
       
-      {/* Reproductor flotante igual al de género */}
       {currentSong && isPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
