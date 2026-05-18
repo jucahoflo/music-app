@@ -22,7 +22,6 @@ interface Genre {
   songs: Song[]
 }
 
-// Audio global para persistencia
 let globalAudio: HTMLAudioElement | null = null
 let globalPdfWindow: Window | null = null
 
@@ -94,9 +93,14 @@ export default function GenrePage() {
       setDuration(globalAudio.duration || 0)
       setCurrentTime(globalAudio.currentTime || 0)
       
-      const updateTime = () => setCurrentTime(globalAudio.currentTime)
-      globalAudio.addEventListener('timeupdate', updateTime)
-      return () => globalAudio.removeEventListener('timeupdate', updateTime)
+      const updateTime = () => {
+        if (globalAudio) {
+          setCurrentTime(globalAudio.currentTime)
+        }
+      }
+      const audioRef = globalAudio
+      audioRef.addEventListener('timeupdate', updateTime)
+      return () => audioRef.removeEventListener('timeupdate', updateTime)
     }
   }, [])
 
@@ -157,13 +161,23 @@ export default function GenrePage() {
     setDuration(0)
     
     const onCanPlay = () => {
-      globalAudio.play()
-        .then(() => setIsPlaying(true))
-        .catch(err => console.error('Error:', err))
+      if (globalAudio) {
+        globalAudio.play()
+          .then(() => setIsPlaying(true))
+          .catch(err => console.error('Error:', err))
+      }
     }
     
-    const onTimeUpdate = () => setCurrentTime(globalAudio.currentTime)
-    const onLoadedMetadata = () => setDuration(globalAudio.duration)
+    const onTimeUpdate = () => {
+      if (globalAudio) {
+        setCurrentTime(globalAudio.currentTime)
+      }
+    }
+    const onLoadedMetadata = () => {
+      if (globalAudio) {
+        setDuration(globalAudio.duration)
+      }
+    }
     const onEnded = () => {
       setIsPlaying(false)
       setCurrentSong(null)
@@ -172,12 +186,13 @@ export default function GenrePage() {
       globalAudio = null
     }
     
-    globalAudio.addEventListener('canplay', onCanPlay)
-    globalAudio.addEventListener('timeupdate', onTimeUpdate)
-    globalAudio.addEventListener('loadedmetadata', onLoadedMetadata)
-    globalAudio.addEventListener('ended', onEnded)
+    const audioRef = globalAudio
+    audioRef.addEventListener('canplay', onCanPlay)
+    audioRef.addEventListener('timeupdate', onTimeUpdate)
+    audioRef.addEventListener('loadedmetadata', onLoadedMetadata)
+    audioRef.addEventListener('ended', onEnded)
     
-    globalAudio.load()
+    audioRef.load()
     
     globalPdfWindow = window.open(song.pdfUrl, '_blank')
   }
