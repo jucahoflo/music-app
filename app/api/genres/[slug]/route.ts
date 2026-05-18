@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Datos estáticos - funciona siempre
 const songsData: Record<string, any[]> = {
   salsa: [{ 
     id: '1', 
