@@ -62,12 +62,13 @@ export default function PlaylistsPage() {
   // Restaurar audio al cargar
   useEffect(() => {
     if (globalAudio && globalAudio.src && !globalAudio.paused) {
-      const songId = globalAudio.getAttribute('data-song-id') || ''
-      const songTitle = globalAudio.getAttribute('data-song-title') || ''
-      const songArtist = globalAudio.getAttribute('data-song-artist') || ''
-      const songDuration = globalAudio.getAttribute('data-song-duration') || ''
-      const songPdfUrl = globalAudio.getAttribute('data-song-pdf') || ''
-      const songIndex = parseInt(globalAudio.getAttribute('data-song-index') || '-1')
+      const audio = globalAudio
+      const songId = audio.getAttribute('data-song-id') || ''
+      const songTitle = audio.getAttribute('data-song-title') || ''
+      const songArtist = audio.getAttribute('data-song-artist') || ''
+      const songDuration = audio.getAttribute('data-song-duration') || ''
+      const songPdfUrl = audio.getAttribute('data-song-pdf') || ''
+      const songIndex = parseInt(audio.getAttribute('data-song-index') || '-1')
       
       setCurrentSong({
         id: songId,
@@ -76,17 +77,17 @@ export default function PlaylistsPage() {
         duration: songDuration,
         genreName: '',
         genreSlug: '',
-        mp3Url: globalAudio.src,
+        mp3Url: audio.src,
         pdfUrl: songPdfUrl
       })
       setCurrentIndex(songIndex)
       setIsPlaying(true)
-      setDuration(globalAudio.duration || 0)
-      setCurrentTime(globalAudio.currentTime || 0)
+      setDuration(audio.duration || 0)
+      setCurrentTime(audio.currentTime || 0)
       
-      const updateTime = () => setCurrentTime(globalAudio.currentTime)
-      globalAudio.addEventListener('timeupdate', updateTime)
-      return () => globalAudio.removeEventListener('timeupdate', updateTime)
+      const updateTime = () => setCurrentTime(audio.currentTime)
+      audio.addEventListener('timeupdate', updateTime)
+      return () => audio.removeEventListener('timeupdate', updateTime)
     }
   }, [])
 
@@ -154,15 +155,15 @@ export default function PlaylistsPage() {
       globalPdfWindow = null
     }
     
-    globalAudio = new Audio()
-    globalAudio.src = song.mp3Url
-    globalAudio.volume = volume
-    globalAudio.setAttribute('data-song-id', song.id)
-    globalAudio.setAttribute('data-song-title', song.title)
-    globalAudio.setAttribute('data-song-artist', song.artist)
-    globalAudio.setAttribute('data-song-duration', song.duration)
-    globalAudio.setAttribute('data-song-pdf', song.pdfUrl)
-    globalAudio.setAttribute('data-song-index', index.toString())
+    const audio = new Audio()
+    audio.src = song.mp3Url
+    audio.volume = volume
+    audio.setAttribute('data-song-id', song.id)
+    audio.setAttribute('data-song-title', song.title)
+    audio.setAttribute('data-song-artist', song.artist)
+    audio.setAttribute('data-song-duration', song.duration)
+    audio.setAttribute('data-song-pdf', song.pdfUrl)
+    audio.setAttribute('data-song-index', index.toString())
     
     setCurrentSong(song)
     setCurrentIndex(index)
@@ -170,13 +171,13 @@ export default function PlaylistsPage() {
     setDuration(0)
     
     const onCanPlay = () => {
-      globalAudio.play()
+      audio.play()
         .then(() => setIsPlaying(true))
         .catch(err => console.error('Error:', err))
     }
     
-    const onTimeUpdate = () => setCurrentTime(globalAudio.currentTime)
-    const onLoadedMetadata = () => setDuration(globalAudio.duration)
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onLoadedMetadata = () => setDuration(audio.duration)
     const onEnded = () => {
       if (autoPlay && currentIndex < songs.length - 1) {
         const nextIndex = currentIndex + 1
@@ -191,12 +192,13 @@ export default function PlaylistsPage() {
       }
     }
     
-    globalAudio.addEventListener('canplay', onCanPlay)
-    globalAudio.addEventListener('timeupdate', onTimeUpdate)
-    globalAudio.addEventListener('loadedmetadata', onLoadedMetadata)
-    globalAudio.addEventListener('ended', onEnded)
+    audio.addEventListener('canplay', onCanPlay)
+    audio.addEventListener('timeupdate', onTimeUpdate)
+    audio.addEventListener('loadedmetadata', onLoadedMetadata)
+    audio.addEventListener('ended', onEnded)
     
-    globalAudio.load()
+    audio.load()
+    globalAudio = audio
     
     globalPdfWindow = window.open(song.pdfUrl, '_blank')
   }
