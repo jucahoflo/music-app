@@ -233,10 +233,6 @@ export default function PlaylistPage() {
     audio.load()
     
     // Guardar referencia global
-    if (globalAudio) {
-      globalAudio.pause()
-      globalAudio.src = ''
-    }
     globalAudio = audio
     
     // Abrir PDF
