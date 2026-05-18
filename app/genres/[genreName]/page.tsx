@@ -22,18 +22,25 @@ interface Genre {
   songs: Song[]
 }
 
+// Audio global para persistencia
+let globalAudio: HTMLAudioElement | null = null
+let globalPdfWindow: Window | null = null
+
 export default function GenrePage() {
   const params = useParams()
   const genreName = params.genreName as string
   
   const [genre, setGenre] = useState<Genre | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null)
-  const [pdfWindow, setPdfWindow] = useState<Window | null>(null)
+  const [volume, setVolume] = useState(0.7)
+  const [animationBars, setAnimationBars] = useState<number[]>(Array(30).fill(5))
+  
+  const animationRef = useRef<number>()
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00'
@@ -45,6 +52,55 @@ export default function GenrePage() {
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(user => setIsAdmin(user.role === 'admin'))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (isPlaying) {
+      const animate = () => {
+        setAnimationBars(prev => prev.map(() => Math.random() * 60 + 10))
+        animationRef.current = requestAnimationFrame(animate)
+      }
+      animate()
+    } else {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current)
+      setAnimationBars(Array(30).fill(5))
+    }
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current)
+    }
+  }, [isPlaying])
+
+  useEffect(() => {
+    if (globalAudio && globalAudio.src && !globalAudio.paused) {
+      const songId = globalAudio.getAttribute('data-song-id') || ''
+      const songTitle = globalAudio.getAttribute('data-song-title') || ''
+      const songArtist = globalAudio.getAttribute('data-song-artist') || ''
+      const songDuration = globalAudio.getAttribute('data-song-duration') || ''
+      const songPdfUrl = globalAudio.getAttribute('data-song-pdf') || ''
+      
+      setCurrentSong({
+        id: songId,
+        title: songTitle,
+        artist: songArtist,
+        duration: songDuration,
+        mp3Url: globalAudio.src,
+        pdfUrl: songPdfUrl
+      })
+      setIsPlaying(true)
+      setDuration(globalAudio.duration || 0)
+      setCurrentTime(globalAudio.currentTime || 0)
+      
+      const updateTime = () => setCurrentTime(globalAudio.currentTime)
+      globalAudio.addEventListener('timeupdate', updateTime)
+      return () => globalAudio.removeEventListener('timeupdate', updateTime)
+    }
+  }, [])
+
+  useEffect(() => {
     fetch(`/api/genres/${genreName}`)
       .then(res => res.json())
       .then(data => {
@@ -54,30 +110,20 @@ export default function GenrePage() {
       .catch(() => setLoading(false))
   }, [genreName])
 
-  useEffect(() => {
-    return () => {
-      if (audioRef) {
-        audioRef.pause()
-        audioRef.currentTime = 0
-      }
-      if (pdfWindow && !pdfWindow.closed) {
-        pdfWindow.close()
-      }
-    }
-  }, [audioRef, pdfWindow])
-
   const stopCurrentSong = () => {
-    if (audioRef) {
-      audioRef.pause()
-      audioRef.currentTime = 0
-      setIsPlaying(false)
-      setCurrentSong(null)
-      setCurrentTime(0)
-      setDuration(0)
+    if (globalAudio) {
+      globalAudio.pause()
+      globalAudio.currentTime = 0
+      globalAudio.src = ''
+      globalAudio = null
     }
-    if (pdfWindow && !pdfWindow.closed) {
-      pdfWindow.close()
-      setPdfWindow(null)
+    setIsPlaying(false)
+    setCurrentSong(null)
+    setCurrentTime(0)
+    setDuration(0)
+    if (globalPdfWindow && !globalPdfWindow.closed) {
+      globalPdfWindow.close()
+      globalPdfWindow = null
     }
   }
 
@@ -87,67 +133,83 @@ export default function GenrePage() {
       return
     }
     
-    stopCurrentSong()
+    if (globalAudio) {
+      globalAudio.pause()
+      globalAudio.currentTime = 0
+      globalAudio = null
+    }
+    if (globalPdfWindow && !globalPdfWindow.closed) {
+      globalPdfWindow.close()
+      globalPdfWindow = null
+    }
     
-    const newAudio = new Audio(song.mp3Url)
+    globalAudio = new Audio()
+    globalAudio.src = song.mp3Url
+    globalAudio.volume = volume
+    globalAudio.setAttribute('data-song-id', song.id)
+    globalAudio.setAttribute('data-song-title', song.title)
+    globalAudio.setAttribute('data-song-artist', song.artist)
+    globalAudio.setAttribute('data-song-duration', song.duration)
+    globalAudio.setAttribute('data-song-pdf', song.pdfUrl)
+    
     setCurrentSong(song)
-    setAudioRef(newAudio)
     setCurrentTime(0)
     setDuration(0)
     
-    newAudio.addEventListener('timeupdate', () => {
-      setCurrentTime(newAudio.currentTime)
-    })
+    const onCanPlay = () => {
+      globalAudio.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => console.error('Error:', err))
+    }
     
-    newAudio.addEventListener('loadedmetadata', () => {
-      setDuration(newAudio.duration)
-    })
-    
-    newAudio.addEventListener('ended', () => {
+    const onTimeUpdate = () => setCurrentTime(globalAudio.currentTime)
+    const onLoadedMetadata = () => setDuration(globalAudio.duration)
+    const onEnded = () => {
       setIsPlaying(false)
       setCurrentSong(null)
       setCurrentTime(0)
-      if (pdfWindow && !pdfWindow.closed) {
-        pdfWindow.close()
-        setPdfWindow(null)
-      }
-    })
-    
-    newAudio.play()
-    setIsPlaying(true)
-    
-    const newPdfWindow = window.open(song.pdfUrl, '_blank')
-    setPdfWindow(newPdfWindow)
-    
-    newAudio.onerror = () => {
-      alert(`Error: No se pudo reproducir ${song.title}. Verifica que el archivo existe.`)
-      stopCurrentSong()
+      if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
+      globalAudio = null
     }
+    
+    globalAudio.addEventListener('canplay', onCanPlay)
+    globalAudio.addEventListener('timeupdate', onTimeUpdate)
+    globalAudio.addEventListener('loadedmetadata', onLoadedMetadata)
+    globalAudio.addEventListener('ended', onEnded)
+    
+    globalAudio.load()
+    
+    globalPdfWindow = window.open(song.pdfUrl, '_blank')
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef || !duration) return
+    if (!globalAudio || !duration) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const percent = x / rect.width
-    const newTime = percent * duration
-    audioRef.currentTime = newTime
-    setCurrentTime(newTime)
+    globalAudio.currentTime = percent * duration
+    setCurrentTime(percent * duration)
+  }
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value)
+    setVolume(newVolume)
+    if (globalAudio) globalAudio.volume = newVolume
   }
 
   const viewPdf = (pdfUrl: string) => {
-    window.open(pdfUrl, '_blank')
+    if (pdfUrl && pdfUrl !== '#') window.open(pdfUrl, '_blank')
   }
 
   const colors: Record<string, string> = {
+    Salsa: 'from-green-500 to-lime-500',
+    Bailables: 'from-yellow-500 to-orange-400',
     Balada: 'from-pink-500 to-rose-500',
     Pop: 'from-blue-500 to-cyan-500',
     Rock: 'from-purple-500 to-indigo-500',
     Bachata: 'from-emerald-500 to-teal-500',
     Ranchera: 'from-amber-500 to-orange-500',
     Merengues: 'from-red-500 to-pink-500',
-    Bailables: 'from-yellow-500 to-orange-400',
-    Salsa: 'from-green-500 to-lime-500',
     Bolero: 'from-slate-500 to-gray-500',
     Madres: 'from-rose-400 to-pink-400',
     Padre: 'from-blue-400 to-indigo-400',
@@ -175,7 +237,7 @@ export default function GenrePage() {
         <div className="container mx-auto px-4 py-8">
           <BackButton />
           
-          <div className={`bg-gradient-to-r ${colors[genre.name]} rounded-2xl p-8 mb-8 text-white`}>
+          <div className={`bg-gradient-to-r ${colors[genre.name] || 'from-gray-500 to-gray-600'} rounded-2xl p-8 mb-8 text-white`}>
             <h1 className="text-4xl font-bold mb-2">{genre.name}</h1>
             <p>{genre.songs?.length || 0} canciones</p>
           </div>
@@ -191,10 +253,10 @@ export default function GenrePage() {
                     <p className="text-gray-600">{song.artist}</p>
                     <p className="text-gray-400 text-sm mt-1">{song.duration || '3:00'}</p>
                   </div>
-                  <div className="p-4 pt-0 flex gap-2">
+                  <div className="p-4 pt-0">
                     <button
                       onClick={() => playSong(song)}
-                      className={`flex-1 py-2 rounded-lg transition flex items-center justify-center gap-2 ${
+                      className={`w-full py-2 rounded-lg transition flex items-center justify-center gap-2 ${
                         currentSong?.id === song.id && isPlaying
                           ? 'bg-red-600 hover:bg-red-700 text-white'
                           : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -204,10 +266,22 @@ export default function GenrePage() {
                     </button>
                     <button
                       onClick={() => viewPdf(song.pdfUrl)}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                      className="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
                     >
-                      📄 Letra
+                      📄 Ver Letra
                     </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          if (confirm('¿Eliminar esta canción?')) {
+                            alert('Función en desarrollo')
+                          }
+                        }}
+                        className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
+                      >
+                        🗑 Eliminar
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -219,6 +293,16 @@ export default function GenrePage() {
       {currentSong && isPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
+            <div className="flex justify-center items-center gap-0.5 h-12 mb-2">
+              {animationBars.map((height, i) => (
+                <div
+                  key={i}
+                  className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75"
+                  style={{ height: `${height}%`, maxHeight: '48px' }}
+                />
+              ))}
+            </div>
+            
             <div className="flex justify-between items-center mb-2">
               <div>
                 <span className="font-bold text-lg">{currentSong.title}</span>
@@ -230,7 +314,7 @@ export default function GenrePage() {
             </div>
             
             <div 
-              className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden"
+              className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2"
               onClick={seekTo}
             >
               <div 
@@ -239,16 +323,30 @@ export default function GenrePage() {
               />
             </div>
             
-            <div className="flex justify-center gap-4 mt-3">
+            <div className="flex justify-center items-center gap-4 mt-2">
               <button
                 onClick={stopCurrentSong}
                 className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition"
               >
                 ⏹ Detener
               </button>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🔊</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500"
+                />
+              </div>
+              
               <button
                 onClick={() => viewPdf(currentSong.pdfUrl)}
-                className="bg-purple-600 hover:bg-purple-700 px-6 py-1.5 rounded-full text-sm transition"
+                className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition"
               >
                 📄 Ver Letra
               </button>

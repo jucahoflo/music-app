@@ -23,9 +23,7 @@ export default function UploadPage() {
         }
         setChecking(false)
       })
-      .catch(() => {
-        router.push('/login')
-      })
+      .catch(() => router.push('/login'))
   }, [router])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -37,11 +35,7 @@ export default function UploadPage() {
     const formData = new FormData(e.currentTarget)
     
     try {
-      const res = await fetch('/api/songs', { 
-        method: 'POST', 
-        body: formData 
-      })
-      
+      const res = await fetch('/api/songs', { method: 'POST', body: formData })
       const data = await res.json()
       
       if (res.ok) {
@@ -52,10 +46,10 @@ export default function UploadPage() {
           router.refresh()
         }, 2000)
       } else {
-        setError(data.error || 'Error al subir la canción')
+        setError(data.error || 'Error al subir')
       }
-    } catch (error) {
-      setError('Error de conexión al servidor')
+    } catch (err) {
+      setError('Error de conexión')
     } finally {
       setLoading(false)
     }
@@ -66,7 +60,7 @@ export default function UploadPage() {
       <div className="min-h-screen bg-gray-50">
         <Menu />
         <div className="lg:pl-64">
-          <div className="flex items-center justify-center h-64">Verificando permisos...</div>
+          <div className="flex items-center justify-center h-64">Verificando...</div>
         </div>
       </div>
     )
@@ -110,14 +104,14 @@ export default function UploadPage() {
               <label className="block text-sm font-medium mb-2">Género *</label>
               <select name="genreId" required className="w-full px-4 py-2 border rounded-lg">
                 <option value="">Selecciona un género</option>
+                <option value="salsa">Salsa</option>
+                <option value="bailables">Bailables</option>
+                <option value="merengues">Merengues</option>
                 <option value="balada">Balada</option>
                 <option value="pop">Pop</option>
                 <option value="rock">Rock</option>
                 <option value="bachata">Bachata</option>
                 <option value="ranchera">Ranchera</option>
-                <option value="merengues">Merengues</option>
-                <option value="bailables">Bailables</option>
-                <option value="salsa">Salsa</option>
                 <option value="bolero">Bolero</option>
                 <option value="madres">Madres</option>
                 <option value="padre">Padre</option>

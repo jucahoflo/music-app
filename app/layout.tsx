@@ -7,8 +7,19 @@ import VisitTracker from '@/components/VisitTracker'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'MUSIC - Organizador Musical',
-  description: 'Organiza tu biblioteca musical por géneros',
+  title: 'MUSIC - Tu Biblioteca Musical',
+  description: 'Reproduce música y letras organizadas por géneros',
+  manifest: '/manifest.json',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes',
+  themeColor: '#1a1a2e',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'MUSIC',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default function RootLayout({
@@ -18,6 +29,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className={inter.className}>
         <VisitTracker />
         <Menu />
