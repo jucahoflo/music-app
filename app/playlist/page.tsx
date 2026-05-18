@@ -175,18 +175,11 @@ export default function PlaylistPage() {
       return
     }
     
-    if (globalAudio) {
-      globalAudio.pause()
-      globalAudio.currentTime = 0
-      globalAudio.src = ''
-      globalAudio = null
-    }
     if (globalPdfWindow && !globalPdfWindow.closed) {
       globalPdfWindow.close()
       globalPdfWindow = null
     }
     
-    // Crear nuevo audio
     const audio = new Audio()
     audio.src = song.mp3Url
     audio.volume = volume
@@ -196,7 +189,6 @@ export default function PlaylistPage() {
     setCurrentTime(0)
     setDuration(0)
     
-    // Eventos
     const onCanPlay = () => {
       audio.play()
         .then(() => setIsPlaying(true))
@@ -205,23 +197,16 @@ export default function PlaylistPage() {
     
     const onTimeUpdate = () => setCurrentTime(audio.currentTime)
     const onLoadedMetadata = () => setDuration(audio.duration)
-    
-    // Evento ended: cuando termina la canción
     const onEnded = () => {
-      console.log('Canción terminada, autoPlay:', autoPlay, 'currentIndex:', index, 'total:', playlist.length)
-      
       if (autoPlay && index < playlist.length - 1) {
         const nextIndex = index + 1
-        const nextSong = playlist[nextIndex]
-        console.log('Reproduciendo siguiente:', nextSong.title)
-        playSong(nextSong, nextIndex)
+        playSong(playlist[nextIndex], nextIndex)
       } else {
         setIsPlaying(false)
         setCurrentSong(null)
         setCurrentIndex(-1)
         setCurrentTime(0)
         if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
-        globalAudio = null
       }
     }
     
@@ -232,15 +217,16 @@ export default function PlaylistPage() {
     
     audio.load()
     
-    // Guardar referencia global
+    // Limpiar audio anterior y asignar nuevo
     if (globalAudio) {
       globalAudio.pause()
       globalAudio.src = ''
     }
     globalAudio = audio
     
-    // Abrir PDF
-    globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    if (song.pdfUrl && song.pdfUrl !== '#') {
+      globalPdfWindow = window.open(song.pdfUrl, '_blank')
+    }
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -323,11 +309,11 @@ export default function PlaylistPage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Panel izquierdo - Canciones disponibles */}
+            {/* Panel izquierdo */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="p-4 bg-gray-800 text-white">
                 <h2 className="font-bold">🎵 Canciones Disponibles</h2>
-                <p className="text-xs opacity-75">Haz clic en + para agregar a tu playlist</p>
+                <p className="text-xs opacity-75">Haz clic en + para agregar</p>
               </div>
               <div className="max-h-[450px] overflow-y-auto">
                 {allSongs.map((song) => (
@@ -338,7 +324,7 @@ export default function PlaylistPage() {
                     </div>
                     <button
                       onClick={() => addToPlaylist(song)}
-                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"
+                      className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
                     >
                       + Agregar
                     </button>
@@ -347,29 +333,26 @@ export default function PlaylistPage() {
               </div>
             </div>
             
-            {/* Panel derecho - Tu Playlist */}
+            {/* Panel derecho */}
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
               <div className="p-4 bg-purple-800 text-white">
                 <h2 className="font-bold">🎧 Tu Playlist</h2>
-                <p className="text-xs opacity-75">↑↓ reordenar | ▶ reproducir | ✕ eliminar</p>
+                <p className="text-xs opacity-75">↑↓ reordenar | ▶ reproducir</p>
               </div>
               <div className="max-h-[450px] overflow-y-auto">
                 {playlist.length === 0 ? (
                   <div className="p-8 text-center text-gray-500">
-                    🎵 Agrega canciones para crear tu playlist
+                    Agrega canciones para crear tu playlist
                   </div>
                 ) : (
                   playlist.map((song, index) => (
-                    <div key={song.id} className={`p-3 border-b hover:bg-gray-50 transition ${currentIndex === index && isPlaying ? 'bg-blue-100' : ''}`}>
+                    <div key={song.id} className={`p-3 border-b hover:bg-gray-50 ${currentIndex === index && isPlaying ? 'bg-blue-100' : ''}`}>
                       <div className="flex justify-between items-center">
                         <div className="flex-1">
                           <div className="font-medium">
                             {index + 1}. {song.title}
-                            {autoPlay && currentIndex === index && isPlaying && (
-                              <span className="ml-2 text-xs text-green-600">▶ Reproduciendo</span>
-                            )}
-                            {autoPlay && index < playlist.length - 1 && currentIndex === index && isPlaying && (
-                              <span className="ml-2 text-xs text-blue-600">⏭ Siguiente: {playlist[index + 1]?.title}</span>
+                            {currentIndex === index && isPlaying && (
+                              <span className="ml-2 text-xs text-green-600">▶ Sonando</span>
                             )}
                           </div>
                           <div className="text-sm text-gray-500">{song.artist} • {song.duration}</div>
@@ -378,30 +361,30 @@ export default function PlaylistPage() {
                           <button
                             onClick={() => moveUp(index)}
                             disabled={index === 0}
-                            className="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded disabled:opacity-50 text-sm"
+                            className="px-2 py-1 bg-gray-500 text-white rounded disabled:opacity-50 text-sm"
                           >
                             ↑
                           </button>
                           <button
                             onClick={() => moveDown(index)}
                             disabled={index === playlist.length - 1}
-                            className="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded disabled:opacity-50 text-sm"
+                            className="px-2 py-1 bg-gray-500 text-white rounded disabled:opacity-50 text-sm"
                           >
                             ↓
                           </button>
                           <button
                             onClick={() => playSong(song, index)}
-                            className={`px-3 py-1 rounded-lg text-sm transition ${
+                            className={`px-3 py-1 rounded text-sm ${
                               currentIndex === index && isPlaying
-                                ? 'bg-red-600 hover:bg-red-700 text-white'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                ? 'bg-red-600 text-white'
+                                : 'bg-blue-600 text-white'
                             }`}
                           >
                             {currentIndex === index && isPlaying ? '⏹' : '▶'}
                           </button>
                           <button
                             onClick={() => removeFromPlaylist(index)}
-                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                            className="px-2 py-1 bg-red-600 text-white rounded text-sm"
                           >
                             ✕
                           </button>
@@ -418,11 +401,11 @@ export default function PlaylistPage() {
       
       {/* Reproductor flotante */}
       {currentSong && isPlaying && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
+        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
             <div className="flex justify-center items-center gap-0.5 h-12 mb-2">
               {animationBars.map((height, i) => (
-                <div key={i} className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75" style={{ height: `${height}%`, maxHeight: '48px' }} />
+                <div key={i} className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all" style={{ height: `${height}%`, maxHeight: '48px' }} />
               ))}
             </div>
             
@@ -440,16 +423,16 @@ export default function PlaylistPage() {
             </div>
             
             <div className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2" onClick={seekTo}>
-              <div className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100" style={{ width: `${progressPercent}%` }} />
+              <div className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full" style={{ width: `${progressPercent}%` }} />
             </div>
             
             <div className="flex justify-center items-center gap-4 mt-2">
-              <button onClick={stopCurrentSong} className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm">⏹ Detener</button>
+              <button onClick={stopCurrentSong} className="bg-red-600 px-6 py-1.5 rounded-full text-sm">⏹ Detener</button>
               <div className="flex items-center gap-2">
                 <span className="text-sm">🔊</span>
-                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500" />
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} className="w-24 h-1 bg-gray-600 rounded-lg" />
               </div>
-              <button onClick={() => viewPdf(currentSong.pdfUrl)} className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm">📄 Ver Letra</button>
+              <button onClick={() => viewPdf(currentSong.pdfUrl)} className="bg-purple-600 px-4 py-1.5 rounded-full text-sm">📄 Ver Letra</button>
             </div>
           </div>
         </div>
