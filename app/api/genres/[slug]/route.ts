@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+// Todas las canciones organizadas por género
 const songsData: Record<string, any[]> = {
   salsa: [
     { id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/mp3/EL_PRESO.mp3', pdfUrl: '/pdf/EL_PRESO.pdf' },
@@ -12,23 +13,34 @@ const songsData: Record<string, any[]> = {
   ],
   merengues: [
     { id: '6', title: 'SI_ME_DEJAS_NO_VALE', artist: 'LA MAQUINA', duration: '3:45', mp3Url: '/mp3/SI_ME_DEJAS_NO_VALE.mp3', pdfUrl: '/pdf/SI_ME_DEJAS_NO_VALE.pdf' }
-  ]
+  ],
+  balada: [],
+  pop: [],
+  rock: [],
+  bachata: [],
+  ranchera: [],
+  bolero: [],
+  madres: [],
+  padre: [],
+  religiosa: [],
+  'agropecuaria-popular': []
 };
 
+// Mapeo de géneros con sus nombres y slugs
 const genresList: Record<string, any> = {
   salsa: { id: '8', name: 'Salsa', slug: 'salsa', songs: songsData.salsa || [] },
   bailables: { id: '7', name: 'Bailables', slug: 'bailables', songs: songsData.bailables || [] },
   merengues: { id: '6', name: 'Merengues', slug: 'merengues', songs: songsData.merengues || [] },
-  balada: { id: '1', name: 'Balada', slug: 'balada', songs: [] },
-  pop: { id: '2', name: 'Pop', slug: 'pop', songs: [] },
-  rock: { id: '3', name: 'Rock', slug: 'rock', songs: [] },
-  bachata: { id: '4', name: 'Bachata', slug: 'bachata', songs: [] },
-  ranchera: { id: '5', name: 'Ranchera', slug: 'ranchera', songs: [] },
-  bolero: { id: '9', name: 'Bolero', slug: 'bolero', songs: [] },
-  madres: { id: '10', name: 'Madres', slug: 'madres', songs: [] },
-  padre: { id: '11', name: 'Padre', slug: 'padre', songs: [] },
-  religiosa: { id: '12', name: 'Religiosa', slug: 'religiosa', songs: [] },
-  'agropecuaria-popular': { id: '13', name: 'Agropecuaria Popular', slug: 'agropecuaria-popular', songs: [] }
+  balada: { id: '1', name: 'Balada', slug: 'balada', songs: songsData.balada || [] },
+  pop: { id: '2', name: 'Pop', slug: 'pop', songs: songsData.pop || [] },
+  rock: { id: '3', name: 'Rock', slug: 'rock', songs: songsData.rock || [] },
+  bachata: { id: '4', name: 'Bachata', slug: 'bachata', songs: songsData.bachata || [] },
+  ranchera: { id: '5', name: 'Ranchera', slug: 'ranchera', songs: songsData.ranchera || [] },
+  bolero: { id: '9', name: 'Bolero', slug: 'bolero', songs: songsData.bolero || [] },
+  madres: { id: '10', name: 'Madres', slug: 'madres', songs: songsData.madres || [] },
+  padre: { id: '11', name: 'Padre', slug: 'padre', songs: songsData.padre || [] },
+  religiosa: { id: '12', name: 'Religiosa', slug: 'religiosa', songs: songsData.religiosa || [] },
+  'agropecuaria-popular': { id: '13', name: 'Agropecuaria Popular', slug: 'agropecuaria-popular', songs: songsData['agropecuaria-popular'] || [] }
 };
 
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
