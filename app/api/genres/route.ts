@@ -10,7 +10,7 @@ const getSongCount = (slug: string) => {
     rock: 0,
     bachata: 0,
     ranchera: 0,
-    merengues: 0,
+    merengues: 1,
     bolero: 0,
     madres: 0,
     padre: 0,
