@@ -2,42 +2,13 @@ import { NextResponse } from 'next/server';
 
 const songsData: Record<string, any[]> = {
   salsa: [
-    { 
-      id: '1', 
-      title: 'EL PRESO', 
-      artist: 'FRUKO', 
-      duration: '4:30', 
-      mp3Url: '/mp3/EL_PRESO.mp3', 
-      pdfUrl: '/pdf/EL_PRESO.pdf' 
-    },
-    { 
-      id: '4', 
-      title: 'ANA MILE', 
-      artist: 'GRUPO NICHE', 
-      duration: '4:15', 
-      mp3Url: '/mp3/ANA_MILE.mp3', 
-      pdfUrl: '/pdf/ANA_MILE.pdf' 
-    }
+    { id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/mp3/EL_PRESO.mp3', pdfUrl: '/pdf/EL_PRESO.pdf' },
+    { id: '4', title: 'ANA MILE', artist: 'GRUPO NICHE', duration: '4:15', mp3Url: '/mp3/ANA_MILE.mp3', pdfUrl: '/pdf/ANA_MILE.pdf' }
   ],
   bailables: [
-    { id: 'new', title: 'LA_ZENAIDA', artist: 'ARMANDO HERNADEZ', duration: '', mp3Url: '/mp3/LA_ZENAIDA.mp3', pdfUrl: '/pdf/LA_ZENAIDA.pdf' },
-    { id: 'new', title: 'LA ZENAIDA', artist: 'ARMANDO HERNANDEZ', duration: '', mp3Url: '/mp3/LA ZENAIDA.mp3', pdfUrl: '/pdf/LA ZENAIDA.pdf' },
-    { 
-      id: '2', 
-      title: 'AGOBIO', 
-      artist: 'Combo', 
-      duration: '3:45', 
-      mp3Url: '/mp3/AGOBIO.mp3', 
-      pdfUrl: '/pdf/AGOBIO.pdf' 
-    },
-    { 
-      id: '3', 
-      title: 'CONFUNDIDO', 
-      artist: 'Combo', 
-      duration: '3:50', 
-      mp3Url: '/mp3/CONFUNDIDO.mp3', 
-      pdfUrl: '/pdf/CONFUNDIDO.pdf' 
-    }
+    { id: '2', title: 'AGOBIO', artist: 'Combo', duration: '3:45', mp3Url: '/mp3/AGOBIO.mp3', pdfUrl: '/pdf/AGOBIO.pdf' },
+    { id: '3', title: 'CONFUNDIDO', artist: 'Combo', duration: '3:50', mp3Url: '/mp3/CONFUNDIDO.mp3', pdfUrl: '/pdf/CONFUNDIDO.pdf' },
+    { id: '5', title: 'LA ZENAIDA', artist: 'ARMANDO HERNÁNDEZ', duration: '3:00', mp3Url: '/mp3/LA_ZENAIDA.mp3', pdfUrl: '/pdf/LA_ZENAIDA.pdf' }
   ]
 };
 
