@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
 
 const songsData: Record<string, any[]> = {
-  salsa: [{ 
-    id: '1', 
-    title: 'EL PRESO', 
-    artist: 'FRUKO', 
-    duration: '4:30', 
-    mp3Url: '/mp3/1778342428932-EL_PRESO.mp3', 
-    pdfUrl: '/pdf/1778342429011-EL_PRESO.pdf' 
-  }],
+  salsa: [
+    { 
+      id: '1', 
+      title: 'EL PRESO', 
+      artist: 'FRUKO', 
+      duration: '4:30', 
+      mp3Url: '/mp3/1778342428932-EL_PRESO.mp3', 
+      pdfUrl: '/pdf/1778342429011-EL_PRESO.pdf' 
+    },
+    { 
+      id: '4', 
+      title: 'ANA MILE', 
+      artist: 'GRUPO NICHE', 
+      duration: '4:15', 
+      mp3Url: '/mp3/1779127199003-ANA_MILE.mp3', 
+      pdfUrl: '/pdf/1779127199044-ANA_MILE.pdf' 
+    }
+  ],
   bailables: [
     { 
       id: '2', 
