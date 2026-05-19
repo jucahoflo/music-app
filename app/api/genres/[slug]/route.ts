@@ -9,18 +9,21 @@ const songsData: Record<string, any[]> = {
     { id: '2', title: 'AGOBIO', artist: 'Combo', duration: '3:45', mp3Url: '/mp3/AGOBIO.mp3', pdfUrl: '/pdf/AGOBIO.pdf' },
     { id: '3', title: 'CONFUNDIDO', artist: 'Combo', duration: '3:50', mp3Url: '/mp3/CONFUNDIDO.mp3', pdfUrl: '/pdf/CONFUNDIDO.pdf' },
     { id: '5', title: 'LA ZENAIDA', artist: 'ARMANDO HERNÁNDEZ', duration: '3:00', mp3Url: '/mp3/LA_ZENAIDA.mp3', pdfUrl: '/pdf/LA_ZENAIDA.pdf' }
+  ],
+  merengues: [
+    { id: '6', title: 'SI_ME_DEJAS_NO_VALE', artist: 'LA MAQUINA', duration: '3:45', mp3Url: '/mp3/SI_ME_DEJAS_NO_VALE.mp3', pdfUrl: '/pdf/SI_ME_DEJAS_NO_VALE.pdf' }
   ]
 };
 
 const genresList: Record<string, any> = {
   salsa: { id: '8', name: 'Salsa', slug: 'salsa', songs: songsData.salsa || [] },
   bailables: { id: '7', name: 'Bailables', slug: 'bailables', songs: songsData.bailables || [] },
+  merengues: { id: '6', name: 'Merengues', slug: 'merengues', songs: songsData.merengues || [] },
   balada: { id: '1', name: 'Balada', slug: 'balada', songs: [] },
   pop: { id: '2', name: 'Pop', slug: 'pop', songs: [] },
   rock: { id: '3', name: 'Rock', slug: 'rock', songs: [] },
   bachata: { id: '4', name: 'Bachata', slug: 'bachata', songs: [] },
   ranchera: { id: '5', name: 'Ranchera', slug: 'ranchera', songs: [] },
-  merengues: { id: '6', name: 'Merengues', slug: 'merengues', songs: [] },
   bolero: { id: '9', name: 'Bolero', slug: 'bolero', songs: [] },
   madres: { id: '10', name: 'Madres', slug: 'madres', songs: [] },
   padre: { id: '11', name: 'Padre', slug: 'padre', songs: [] },
