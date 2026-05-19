@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
 
@@ -27,7 +27,6 @@ let globalPdfWindow: Window | null = null
 
 export default function GenrePage() {
   const params = useParams()
-  const router = useRouter()
   const genreName = params.genreName as string
   
   const [genre, setGenre] = useState<Genre | null>(null)
@@ -41,6 +40,7 @@ export default function GenrePage() {
   const [animationBars, setAnimationBars] = useState<number[]>(Array(30).fill(5))
   
   const animationRef = useRef<number>()
+  const intervalRef = useRef<NodeJS.Timeout>()
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00'
@@ -115,6 +115,21 @@ export default function GenrePage() {
       .catch(() => setLoading(false))
   }, [genreName])
 
+  // Detectar cuando el PDF está abierto y agregar botón flotante
+  useEffect(() => {
+    if (globalPdfWindow && !globalPdfWindow.closed) {
+      // Crear un intervalo para verificar si el PDF sigue abierto
+      intervalRef.current = setInterval(() => {
+        if (globalPdfWindow && globalPdfWindow.closed) {
+          clearInterval(intervalRef.current)
+        }
+      }, 1000)
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [globalPdfWindow])
+
   const stopCurrentSong = () => {
     if (globalAudio) {
       globalAudio.pause()
@@ -162,25 +177,13 @@ export default function GenrePage() {
     setDuration(0)
     
     const onCanPlay = () => {
-      if (globalAudio) {
-        globalAudio.play()
-          .then(() => setIsPlaying(true))
-          .catch(err => console.error('Error:', err))
-      }
+      audio.play()
+        .then(() => setIsPlaying(true))
+        .catch(err => console.error('Error:', err))
     }
     
-    const onTimeUpdate = () => {
-      if (globalAudio) {
-        setCurrentTime(globalAudio.currentTime)
-      }
-    }
-    
-    const onLoadedMetadata = () => {
-      if (globalAudio) {
-        setDuration(globalAudio.duration)
-      }
-    }
-    
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const onLoadedMetadata = () => setDuration(audio.duration)
     const onEnded = () => {
       setIsPlaying(false)
       setCurrentSong(null)
@@ -198,9 +201,20 @@ export default function GenrePage() {
     
     globalAudio = audio
     
+    // Abrir PDF y agregar botón flotante
     if (song.pdfUrl && song.pdfUrl !== '#') {
       globalPdfWindow = window.open(song.pdfUrl, '_blank')
     }
+  }
+
+  const regresarMenu = () => {
+    // Cerrar PDF si está abierto
+    if (globalPdfWindow && !globalPdfWindow.closed) {
+      globalPdfWindow.close()
+      globalPdfWindow = null
+    }
+    // Navegar al inicio
+    window.location.href = '/'
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -219,37 +233,20 @@ export default function GenrePage() {
   }
 
   const viewPdf = (pdfUrl: string) => {
-    if (pdfUrl && pdfUrl !== '#') window.open(pdfUrl, '_blank')
-  }
-
-  const deleteSong = async (song: Song) => {
-    if (!confirm(`¿Eliminar "${song.title}" permanentemente?`)) return
-    
-    try {
-      const res = await fetch(`/api/songs/${song.id}?mp3Path=${encodeURIComponent(song.mp3Url)}&pdfPath=${encodeURIComponent(song.pdfUrl)}`, {
-        method: 'DELETE',
-      })
-      
-      if (res.ok) {
-        alert('Canción eliminada')
-        window.location.reload()
-      } else {
-        alert('Error al eliminar')
-      }
-    } catch (error) {
-      alert('Error al eliminar')
+    if (pdfUrl && pdfUrl !== '#') {
+      globalPdfWindow = window.open(pdfUrl, '_blank')
     }
   }
 
   const colors: Record<string, string> = {
     Salsa: 'from-green-500 to-lime-500',
     Bailables: 'from-yellow-500 to-orange-400',
+    Merengues: 'from-red-500 to-pink-500',
     Balada: 'from-pink-500 to-rose-500',
     Pop: 'from-blue-500 to-cyan-500',
     Rock: 'from-purple-500 to-indigo-500',
     Bachata: 'from-emerald-500 to-teal-500',
     Ranchera: 'from-amber-500 to-orange-500',
-    Merengues: 'from-red-500 to-pink-500',
     Bolero: 'from-slate-500 to-gray-500',
     Madres: 'from-rose-400 to-pink-400',
     Padre: 'from-blue-400 to-indigo-400',
@@ -312,7 +309,11 @@ export default function GenrePage() {
                     </button>
                     {isAdmin && (
                       <button
-                        onClick={() => deleteSong(song)}
+                        onClick={() => {
+                          if (confirm('¿Eliminar esta canción?')) {
+                            alert('Función en desarrollo')
+                          }
+                        }}
                         className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
                       >
                         🗑 Eliminar
