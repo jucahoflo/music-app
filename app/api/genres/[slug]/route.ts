@@ -20,6 +20,8 @@ const songsData: Record<string, any[]> = {
     }
   ],
   bailables: [
+    { id: 'new', title: 'LA_ZENAIDA', artist: 'ARMANDO HERNADEZ', duration: '', mp3Url: '/mp3/LA_ZENAIDA.mp3', pdfUrl: '/pdf/LA_ZENAIDA.pdf' },
+    { id: 'new', title: 'LA ZENAIDA', artist: 'ARMANDO HERNANDEZ', duration: '', mp3Url: '/mp3/LA ZENAIDA.mp3', pdfUrl: '/pdf/LA ZENAIDA.pdf' },
     { 
       id: '2', 
       title: 'AGOBIO', 
