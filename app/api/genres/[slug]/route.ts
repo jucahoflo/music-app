@@ -7,16 +7,16 @@ const songsData: Record<string, any[]> = {
       title: 'EL PRESO', 
       artist: 'FRUKO', 
       duration: '4:30', 
-      mp3Url: '/mp3/1778342428932-EL_PRESO.mp3', 
-      pdfUrl: '/pdf/1778342429011-EL_PRESO.pdf' 
+      mp3Url: '/mp3/EL_PRESO.mp3', 
+      pdfUrl: '/pdf/EL_PRESO.pdf' 
     },
     { 
       id: '4', 
       title: 'ANA MILE', 
       artist: 'GRUPO NICHE', 
       duration: '4:15', 
-      mp3Url: '/mp3/1779127199003-ANA_MILE.mp3', 
-      pdfUrl: '/pdf/1779127199044-ANA_MILE.pdf' 
+      mp3Url: '/mp3/ANA_MILE.mp3', 
+      pdfUrl: '/pdf/ANA_MILE.pdf' 
     }
   ],
   bailables: [
@@ -25,16 +25,16 @@ const songsData: Record<string, any[]> = {
       title: 'AGOBIO', 
       artist: 'Combo', 
       duration: '3:45', 
-      mp3Url: '/mp3/1778351373525-AGOBIO.mp3', 
-      pdfUrl: '/pdf/1778351373601-AGOBIO.pdf' 
+      mp3Url: '/mp3/AGOBIO.mp3', 
+      pdfUrl: '/pdf/AGOBIO.pdf' 
     },
     { 
       id: '3', 
       title: 'CONFUNDIDO', 
       artist: 'Combo', 
       duration: '3:50', 
-      mp3Url: '/mp3/1778360755859-Confundido.mp3', 
-      pdfUrl: '/pdf/1778360755888-CONFUNDIDO.pdf' 
+      mp3Url: '/mp3/CONFUNDIDO.mp3', 
+      pdfUrl: '/pdf/CONFUNDIDO.pdf' 
     }
   ]
 };
