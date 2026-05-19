@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Menu from '@/components/Menu'
 import VisitTracker from '@/components/VisitTracker'
+import SyncManager from '@/components/SyncManager'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,9 +18,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'MUSIC',
   },
-  formatDetection: {
-    telephone: false,
-  },
 }
 
 export default function RootLayout({
@@ -30,12 +28,13 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={inter.className}>
+        <SyncManager />
         <VisitTracker />
         <Menu />
         <div className="lg:pl-64">
