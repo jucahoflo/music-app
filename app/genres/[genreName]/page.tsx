@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
 
@@ -22,12 +22,12 @@ interface Genre {
   songs: Song[]
 }
 
-// Audio global - declarado fuera del componente
 let globalAudio: HTMLAudioElement | null = null
 let globalPdfWindow: Window | null = null
 
 export default function GenrePage() {
   const params = useParams()
+  const router = useRouter()
   const genreName = params.genreName as string
   
   const [genre, setGenre] = useState<Genre | null>(null)
@@ -157,7 +157,6 @@ export default function GenrePage() {
     audio.setAttribute('data-song-duration', song.duration)
     audio.setAttribute('data-song-pdf', song.pdfUrl)
     
-    globalAudio = audio
     setCurrentSong(song)
     setCurrentTime(0)
     setDuration(0)
@@ -197,6 +196,8 @@ export default function GenrePage() {
     
     audio.load()
     
+    globalAudio = audio
+    
     if (song.pdfUrl && song.pdfUrl !== '#') {
       globalPdfWindow = window.open(song.pdfUrl, '_blank')
     }
@@ -219,6 +220,25 @@ export default function GenrePage() {
 
   const viewPdf = (pdfUrl: string) => {
     if (pdfUrl && pdfUrl !== '#') window.open(pdfUrl, '_blank')
+  }
+
+  const deleteSong = async (song: Song) => {
+    if (!confirm(`¿Eliminar "${song.title}" permanentemente?`)) return
+    
+    try {
+      const res = await fetch(`/api/songs/${song.id}?mp3Path=${encodeURIComponent(song.mp3Url)}&pdfPath=${encodeURIComponent(song.pdfUrl)}`, {
+        method: 'DELETE',
+      })
+      
+      if (res.ok) {
+        alert('Canción eliminada')
+        window.location.reload()
+      } else {
+        alert('Error al eliminar')
+      }
+    } catch (error) {
+      alert('Error al eliminar')
+    }
   }
 
   const colors: Record<string, string> = {
@@ -292,11 +312,7 @@ export default function GenrePage() {
                     </button>
                     {isAdmin && (
                       <button
-                        onClick={() => {
-                          if (confirm('¿Eliminar esta canción?')) {
-                            alert('Función en desarrollo')
-                          }
-                        }}
+                        onClick={() => deleteSong(song)}
                         className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
                       >
                         🗑 Eliminar
@@ -315,11 +331,7 @@ export default function GenrePage() {
           <div className="container mx-auto">
             <div className="flex justify-center items-center gap-0.5 h-12 mb-2">
               {animationBars.map((height, i) => (
-                <div
-                  key={i}
-                  className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75"
-                  style={{ height: `${height}%`, maxHeight: '48px' }}
-                />
+                <div key={i} className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75" style={{ height: `${height}%`, maxHeight: '48px' }} />
               ))}
             </div>
             
@@ -333,43 +345,17 @@ export default function GenrePage() {
               </div>
             </div>
             
-            <div 
-              className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2"
-              onClick={seekTo}
-            >
-              <div 
-                className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <div className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2" onClick={seekTo}>
+              <div className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100" style={{ width: `${progressPercent}%` }} />
             </div>
             
             <div className="flex justify-center items-center gap-4 mt-2">
-              <button
-                onClick={stopCurrentSong}
-                className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition"
-              >
-                ⏹ Detener
-              </button>
-              
+              <button onClick={stopCurrentSong} className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition">⏹ Detener</button>
               <div className="flex items-center gap-2">
                 <span className="text-sm">🔊</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500"
-                />
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500" />
               </div>
-              
-              <button
-                onClick={() => viewPdf(currentSong.pdfUrl)}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition"
-              >
-                📄 Ver Letra
-              </button>
+              <button onClick={() => viewPdf(currentSong.pdfUrl)} className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition">📄 Ver Letra</button>
             </div>
           </div>
         </div>

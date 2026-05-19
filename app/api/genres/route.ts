@@ -1,20 +1,39 @@
 import { NextResponse } from 'next/server';
 
-// Datos de géneros con contador manual
+// Contador manual basado en las canciones actuales
+const getSongCount = (slug: string) => {
+  const counts: Record<string, number> = {
+    salsa: 2,      // EL PRESO, ANA MILE
+    bailables: 3,  // AGOBIO, CONFUNDIDO, LA ZENAIDA
+    balada: 0,
+    pop: 0,
+    rock: 0,
+    bachata: 0,
+    ranchera: 0,
+    merengues: 0,
+    bolero: 0,
+    madres: 0,
+    padre: 0,
+    religiosa: 0,
+    'agropecuaria-popular': 0
+  };
+  return counts[slug] || 0;
+};
+
 const genresData = [
-  { id: '1', name: 'Balada', slug: 'balada', color: 'from-pink-500 to-rose-500', icon: '🎵', songCount: 0 },
-  { id: '2', name: 'Pop', slug: 'pop', color: 'from-blue-500 to-cyan-500', icon: '🎤', songCount: 0 },
-  { id: '3', name: 'Rock', slug: 'rock', color: 'from-purple-500 to-indigo-500', icon: '🤘', songCount: 0 },
-  { id: '4', name: 'Bachata', slug: 'bachata', color: 'from-emerald-500 to-teal-500', icon: '💃', songCount: 0 },
-  { id: '5', name: 'Ranchera', slug: 'ranchera', color: 'from-amber-500 to-orange-500', icon: '🤠', songCount: 0 },
-  { id: '6', name: 'Merengues', slug: 'merengues', color: 'from-red-500 to-pink-500', icon: '🪘', songCount: 0 },
-  { id: '7', name: 'Bailables', slug: 'bailables', color: 'from-yellow-500 to-orange-400', icon: '💃', songCount: 2 },
-  { id: '8', name: 'Salsa', slug: 'salsa', color: 'from-green-500 to-lime-500', icon: '🕺', songCount: 2 },
-  { id: '9', name: 'Bolero', slug: 'bolero', color: 'from-slate-500 to-gray-500', icon: '🌹', songCount: 0 },
-  { id: '10', name: 'Madres', slug: 'madres', color: 'from-rose-400 to-pink-400', icon: '👩', songCount: 0 },
-  { id: '11', name: 'Padre', slug: 'padre', color: 'from-blue-400 to-indigo-400', icon: '👨', songCount: 0 },
-  { id: '12', name: 'Religiosa', slug: 'religiosa', color: 'from-violet-500 to-purple-500', icon: '⛪', songCount: 0 },
-  { id: '13', name: 'Agropecuaria Popular', slug: 'agropecuaria-popular', color: 'from-green-700 to-emerald-700', icon: '🌾', songCount: 0 }
+  { id: '1', name: 'Balada', slug: 'balada', color: 'from-pink-500 to-rose-500', icon: '🎵', songCount: getSongCount('balada') },
+  { id: '2', name: 'Pop', slug: 'pop', color: 'from-blue-500 to-cyan-500', icon: '🎤', songCount: getSongCount('pop') },
+  { id: '3', name: 'Rock', slug: 'rock', color: 'from-purple-500 to-indigo-500', icon: '🤘', songCount: getSongCount('rock') },
+  { id: '4', name: 'Bachata', slug: 'bachata', color: 'from-emerald-500 to-teal-500', icon: '💃', songCount: getSongCount('bachata') },
+  { id: '5', name: 'Ranchera', slug: 'ranchera', color: 'from-amber-500 to-orange-500', icon: '🤠', songCount: getSongCount('ranchera') },
+  { id: '6', name: 'Merengues', slug: 'merengues', color: 'from-red-500 to-pink-500', icon: '🪘', songCount: getSongCount('merengues') },
+  { id: '7', name: 'Bailables', slug: 'bailables', color: 'from-yellow-500 to-orange-400', icon: '💃', songCount: getSongCount('bailables') },
+  { id: '8', name: 'Salsa', slug: 'salsa', color: 'from-green-500 to-lime-500', icon: '🕺', songCount: getSongCount('salsa') },
+  { id: '9', name: 'Bolero', slug: 'bolero', color: 'from-slate-500 to-gray-500', icon: '🌹', songCount: getSongCount('bolero') },
+  { id: '10', name: 'Madres', slug: 'madres', color: 'from-rose-400 to-pink-400', icon: '👩', songCount: getSongCount('madres') },
+  { id: '11', name: 'Padre', slug: 'padre', color: 'from-blue-400 to-indigo-400', icon: '👨', songCount: getSongCount('padre') },
+  { id: '12', name: 'Religiosa', slug: 'religiosa', color: 'from-violet-500 to-purple-500', icon: '⛪', songCount: getSongCount('religiosa') },
+  { id: '13', name: 'Agropecuaria Popular', slug: 'agropecuaria-popular', color: 'from-green-700 to-emerald-700', icon: '🌾', songCount: getSongCount('agropecuaria-popular') }
 ];
 
 export async function GET() {
