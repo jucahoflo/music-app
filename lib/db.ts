@@ -1,4 +1,4 @@
-export async function openDB() {
+export function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('musicDB', 1)
     
@@ -17,20 +17,30 @@ export async function openDB() {
   })
 }
 
-export async function saveGenres(genres: any[]) {
-  const db = await openDB() as IDBDatabase
-  const tx = db.transaction('genres', 'readwrite')
-  const store = tx.objectStore('genres')
-  await store.put({ id: 'genres', data: genres })
-  return tx.done
+export function saveGenres(genres: any[]): Promise<void> {
+  return openDB().then(db => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('genres', 'readwrite')
+      const store = tx.objectStore('genres')
+      const request = store.put({ id: 'genres', data: genres })
+      
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve()
+      
+      tx.onerror = () => reject(tx.error)
+      tx.oncomplete = () => resolve()
+    })
+  })
 }
 
-export async function getGenres() {
-  const db = await openDB() as IDBDatabase
-  return new Promise((resolve) => {
-    const tx = db.transaction('genres', 'readonly')
-    const store = tx.objectStore('genres')
-    const request = store.get('genres')
-    request.onsuccess = () => resolve(request.result?.data || [])
+export function getGenres(): Promise<any[]> {
+  return openDB().then(db => {
+    return new Promise((resolve) => {
+      const tx = db.transaction('genres', 'readonly')
+      const store = tx.objectStore('genres')
+      const request = store.get('genres')
+      
+      request.onsuccess = () => resolve(request.result?.data || [])
+    })
   })
 }

@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { openDB } from '@/lib/db'
+import { openDB, saveGenres } from '@/lib/db'
 
 export default function SyncManager() {
   const [isOnline, setIsOnline] = useState(true)
@@ -31,13 +31,7 @@ export default function SyncManager() {
     try {
       const res = await fetch('/api/genres')
       const data = await res.json()
-      
-      const db = await openDB() as IDBDatabase
-      const tx = db.transaction('genres', 'readwrite')
-      const store = tx.objectStore('genres')
-      await store.put({ id: 'genres', data })
-      await tx.done
-      
+      await saveGenres(data)
     } catch (error) {
       console.error('Error sincronizando:', error)
     } finally {
