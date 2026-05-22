@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import DownloadButton from '/components/DownloadButton'
+import DownloadButton from '@/components/DownloadButton'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
 
