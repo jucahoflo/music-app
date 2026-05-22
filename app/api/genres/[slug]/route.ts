@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-// Todas las canciones organizadas por género
+// Datos estáticos de canciones
 const songsData: Record<string, any[]> = {
   salsa: [
     { id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/mp3/EL_PRESO.mp3', pdfUrl: '/pdf/EL_PRESO.pdf' },
@@ -26,7 +26,6 @@ const songsData: Record<string, any[]> = {
   'agropecuaria-popular': []
 };
 
-// Mapeo de géneros con sus nombres y slugs
 const genresList: Record<string, any> = {
   salsa: { id: '8', name: 'Salsa', slug: 'salsa', songs: songsData.salsa || [] },
   bailables: { id: '7', name: 'Bailables', slug: 'bailables', songs: songsData.bailables || [] },
