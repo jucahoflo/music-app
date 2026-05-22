@@ -145,6 +145,10 @@ export default function GenrePage() {
       globalAudio.currentTime = 0
       globalAudio = null
     }
+    if (globalPdfWindow && !globalPdfWindow.closed) {
+      globalPdfWindow.close()
+      globalPdfWindow = null
+    }
     
     const audio = new Audio()
     audio.src = song.mp3Url
@@ -171,7 +175,7 @@ export default function GenrePage() {
       setIsPlaying(false)
       setCurrentSong(null)
       setCurrentTime(0)
-      setShowPdf(null)
+      if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
       globalAudio = null
     }
     
@@ -184,7 +188,6 @@ export default function GenrePage() {
     
     globalAudio = audio
     
-    // Abrir PDF en modal (con botón de regreso)
     if (song.pdfUrl && song.pdfUrl !== '#') {
       setShowPdf({ url: song.pdfUrl, title: song.title })
     }
