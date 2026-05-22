@@ -45,3 +45,4 @@ export async function GET(request: Request, { params }: { params: { slug: string
   const genre = genresList[params.slug];
   return NextResponse.json(genre || { songs: [] });
 }
+ 
