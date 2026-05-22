@@ -5,40 +5,33 @@ interface DownloadButtonProps {
   mp3Url: string
   pdfUrl: string
   title: string
+  genre?: string  // Hacer genre opcional
 }
 
-export default function DownloadButton({ mp3Url, pdfUrl, title }: DownloadButtonProps) {
+export default function DownloadButton({ mp3Url, pdfUrl, title, genre }: DownloadButtonProps) {
   const [downloading, setDownloading] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
 
   const downloadFile = (url: string, filename: string) => {
-    try {
-      // Crear enlace temporal para descargar
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } catch (error) {
-      console.error('Error descargando:', error)
-      // Fallback: abrir en nueva pestaña
-      window.open(url, '_blank')
-    }
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (downloading) return
     
     setDownloading(true)
     
-    // Descargar MP3 primero
-    downloadFile(mp3Url, `${title}.mp3`)
+    // Usar genre si está disponible, sino solo el título
+    const prefix = genre ? `${genre} - ` : ''
+    downloadFile(mp3Url, `${prefix}${title}.mp3`)
     
-    // Esperar un poco y descargar PDF
     setTimeout(() => {
-      downloadFile(pdfUrl, `${title}.pdf`)
+      downloadFile(pdfUrl, `${prefix}${title}.pdf`)
       setDownloading(false)
       setDownloaded(true)
       setTimeout(() => setDownloaded(false), 3000)
@@ -49,12 +42,8 @@ export default function DownloadButton({ mp3Url, pdfUrl, title }: DownloadButton
     <button
       onClick={handleDownload}
       disabled={downloading}
-      className={`text-xs px-2 py-1 rounded transition-all duration-200 ${
-        downloaded 
-          ? 'bg-green-600 text-white' 
-          : downloading 
-          ? 'bg-blue-600 text-white' 
-          : 'bg-gray-600 hover:bg-gray-700 text-white'
+      className={`text-xs px-2 py-1 rounded transition ${
+        downloaded ? 'bg-green-600 text-white' : 'bg-gray-600 hover:bg-gray-700 text-white'
       }`}
       title="Descargar MP3 y PDF"
     >
