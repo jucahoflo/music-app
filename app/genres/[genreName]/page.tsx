@@ -307,6 +307,9 @@ export default function GenrePage() {
                       className="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
                     >
                       📄 Ver Letra
+                    <div className="mt-2">
+                      <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} />
+                    </div>
                     </button>
                     {isAdmin && (
                       <button
