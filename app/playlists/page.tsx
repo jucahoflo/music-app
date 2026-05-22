@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import Menu from '@/components/Menu'
 import BackButton from '@/components/BackButton'
+import DownloadButton from '@/components/DownloadButton'
+import PdfViewerModal from '@/components/PdfViewerModal'
 
 interface Song {
   id: string
@@ -27,6 +29,7 @@ export default function PlaylistsPage() {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.7)
   const [animationBars, setAnimationBars] = useState<number[]>(Array(30).fill(5))
+  const [showPdf, setShowPdf] = useState<{ url: string; title: string } | null>(null)
   
   const animationRef = useRef<number>()
 
@@ -54,36 +57,6 @@ export default function PlaylistsPage() {
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
   }, [isPlaying])
-
-  // Restaurar audio al cargar
-  useEffect(() => {
-    if (globalAudio && globalAudio.src && !globalAudio.paused) {
-      const audio = globalAudio
-      const songId = audio.getAttribute('data-song-id') || ''
-      const songTitle = audio.getAttribute('data-song-title') || ''
-      const songArtist = audio.getAttribute('data-song-artist') || ''
-      const songDuration = audio.getAttribute('data-song-duration') || ''
-      const songPdfUrl = audio.getAttribute('data-song-pdf') || ''
-      
-      setCurrentSong({
-        id: songId,
-        title: songTitle,
-        artist: songArtist,
-        duration: songDuration,
-        genreName: '',
-        genreSlug: '',
-        mp3Url: audio.src,
-        pdfUrl: songPdfUrl
-      })
-      setIsPlaying(true)
-      setDuration(audio.duration || 0)
-      setCurrentTime(audio.currentTime || 0)
-      
-      const updateTime = () => setCurrentTime(audio.currentTime)
-      audio.addEventListener('timeupdate', updateTime)
-      return () => audio.removeEventListener('timeupdate', updateTime)
-    }
-  }, [])
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -126,10 +99,6 @@ export default function PlaylistsPage() {
     setCurrentSong(null)
     setCurrentTime(0)
     setDuration(0)
-    if (globalPdfWindow && !globalPdfWindow.closed) {
-      globalPdfWindow.close()
-      globalPdfWindow = null
-    }
   }
 
   const playSong = (song: Song) => {
@@ -138,19 +107,15 @@ export default function PlaylistsPage() {
       return
     }
     
-    if (globalPdfWindow && !globalPdfWindow.closed) {
-      globalPdfWindow.close()
-      globalPdfWindow = null
+    if (globalAudio) {
+      globalAudio.pause()
+      globalAudio.currentTime = 0
+      globalAudio = null
     }
     
     const audio = new Audio()
     audio.src = song.mp3Url
     audio.volume = volume
-    audio.setAttribute('data-song-id', song.id)
-    audio.setAttribute('data-song-title', song.title)
-    audio.setAttribute('data-song-artist', song.artist)
-    audio.setAttribute('data-song-duration', song.duration)
-    audio.setAttribute('data-song-pdf', song.pdfUrl)
     
     setCurrentSong(song)
     setCurrentTime(0)
@@ -168,7 +133,6 @@ export default function PlaylistsPage() {
       setIsPlaying(false)
       setCurrentSong(null)
       setCurrentTime(0)
-      if (globalPdfWindow && !globalPdfWindow.closed) globalPdfWindow.close()
     }
     
     audio.addEventListener('canplay', onCanPlay)
@@ -178,16 +142,16 @@ export default function PlaylistsPage() {
     
     audio.load()
     
-    // Limpiar audio anterior
-    if (globalAudio) {
-      globalAudio.pause()
-      globalAudio.src = ''
-    }
     globalAudio = audio
     
+    // Abrir PDF en modal
     if (song.pdfUrl && song.pdfUrl !== '#') {
-      globalPdfWindow = window.open(song.pdfUrl, '_blank')
+      setShowPdf({ url: song.pdfUrl, title: song.title })
     }
+  }
+
+  const closePdf = () => {
+    setShowPdf(null)
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -205,8 +169,8 @@ export default function PlaylistsPage() {
     if (globalAudio) globalAudio.volume = newVolume
   }
 
-  const viewPdf = (pdfUrl: string) => {
-    if (pdfUrl && pdfUrl !== '#') window.open(pdfUrl, '_blank')
+  const viewPdf = (pdfUrl: string, title: string) => {
+    setShowPdf({ url: pdfUrl, title })
   }
 
   if (loading) {
@@ -275,33 +239,33 @@ export default function PlaylistsPage() {
                               {currentSong?.id === song.id && isPlaying ? '⏹' : '▶'}
                             </button>
                             <button
-                              onClick={() => viewPdf(song.pdfUrl)}
+                              onClick={() => viewPdf(song.pdfUrl, song.title)}
                               className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition"
                             >
                               📄
                             </button>
+                            <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} genre={song.genreName} />
                           </div>
-                        </td>
-                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                         </div>
+                       </button>
+                       </div>
+                     </td>
+                   </tr>
+                 ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
       </div>
       
+      {/* Reproductor flotante */}
       {currentSong && isPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
             <div className="flex justify-center items-center gap-0.5 h-12 mb-2">
               {animationBars.map((height, i) => (
-                <div
-                  key={i}
-                  className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75"
-                  style={{ height: `${height}%`, maxHeight: '48px' }}
-                />
+                <div key={i} className="w-1.5 bg-gradient-to-t from-blue-500 to-purple-500 rounded-full transition-all duration-75" style={{ height: `${height}%`, maxHeight: '48px' }} />
               ))}
             </div>
             
@@ -315,46 +279,25 @@ export default function PlaylistsPage() {
               </div>
             </div>
             
-            <div 
-              className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2"
-              onClick={seekTo}
-            >
-              <div 
-                className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100"
-                style={{ width: `${progressPercent}%` }}
-              />
+            <div className="relative h-2 bg-gray-700 rounded-full cursor-pointer group overflow-hidden mb-2" onClick={seekTo}>
+              <div className="absolute h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-100" style={{ width: `${progressPercent}%` }} />
             </div>
             
             <div className="flex justify-center items-center gap-4 mt-2">
-              <button
-                onClick={stopCurrentSong}
-                className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition"
-              >
-                ⏹ Detener
-              </button>
-              
+              <button onClick={stopCurrentSong} className="bg-red-600 hover:bg-red-700 px-6 py-1.5 rounded-full text-sm transition">⏹ Detener</button>
               <div className="flex items-center gap-2">
                 <span className="text-sm">🔊</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500"
-                />
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500" />
               </div>
-              
-              <button
-                onClick={() => viewPdf(currentSong.pdfUrl)}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition"
-              >
-                📄 Ver Letra
-              </button>
+              <button onClick={() => viewPdf(currentSong.pdfUrl, currentSong.title)} className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition">📄 Ver Letra</button>
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Modal PDF con botón de regreso */}
+      {showPdf && (
+        <PdfViewerModal pdfUrl={showPdf.url} title={showPdf.title} onClose={closePdf} />
       )}
     </div>
   )
