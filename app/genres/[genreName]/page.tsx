@@ -1,9 +1,10 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
-import DownloadButton from '@/components/DownloadButton'
 import BackButton from '@/components/BackButton'
 import Menu from '@/components/Menu'
+import DownloadButton from '@/components/DownloadButton'
+import PdfViewerModal from '@/components/PdfViewerModal'
 
 interface Song {
   id: string
@@ -39,9 +40,9 @@ export default function GenrePage() {
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(0.7)
   const [animationBars, setAnimationBars] = useState<number[]>(Array(30).fill(5))
+  const [showPdf, setShowPdf] = useState<{ url: string; title: string } | null>(null)
   
   const animationRef = useRef<number>()
-  const intervalRef = useRef<NodeJS.Timeout>()
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00'
@@ -116,21 +117,6 @@ export default function GenrePage() {
       .catch(() => setLoading(false))
   }, [genreName])
 
-  // Detectar cuando el PDF está abierto y agregar botón flotante
-  useEffect(() => {
-    if (globalPdfWindow && !globalPdfWindow.closed) {
-      // Crear un intervalo para verificar si el PDF sigue abierto
-      intervalRef.current = setInterval(() => {
-        if (globalPdfWindow && globalPdfWindow.closed) {
-          clearInterval(intervalRef.current)
-        }
-      }, 1000)
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-  }, [globalPdfWindow])
-
   const stopCurrentSong = () => {
     if (globalAudio) {
       globalAudio.pause()
@@ -202,20 +188,9 @@ export default function GenrePage() {
     
     globalAudio = audio
     
-    // Abrir PDF y agregar botón flotante
     if (song.pdfUrl && song.pdfUrl !== '#') {
       globalPdfWindow = window.open(song.pdfUrl, '_blank')
     }
-  }
-
-  const regresarMenu = () => {
-    // Cerrar PDF si está abierto
-    if (globalPdfWindow && !globalPdfWindow.closed) {
-      globalPdfWindow.close()
-      globalPdfWindow = null
-    }
-    // Navegar al inicio
-    window.location.href = '/'
   }
 
   const seekTo = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -233,10 +208,12 @@ export default function GenrePage() {
     if (globalAudio) globalAudio.volume = newVolume
   }
 
-  const viewPdf = (pdfUrl: string) => {
-    if (pdfUrl && pdfUrl !== '#') {
-      globalPdfWindow = window.open(pdfUrl, '_blank')
-    }
+  const viewPdf = (pdfUrl: string, title: string) => {
+    setShowPdf({ url: pdfUrl, title })
+  }
+
+  const closePdf = () => {
+    setShowPdf(null)
   }
 
   const colors: Record<string, string> = {
@@ -292,37 +269,39 @@ export default function GenrePage() {
                     <p className="text-gray-400 text-sm mt-1">{song.duration || '3:00'}</p>
                   </div>
                   <div className="p-4 pt-0">
-                    <button
-                      onClick={() => playSong(song)}
-                      className={`w-full py-2 rounded-lg transition flex items-center justify-center gap-2 ${
-                        currentSong?.id === song.id && isPlaying
-                          ? 'bg-red-600 hover:bg-red-700 text-white'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                    >
-                      {currentSong?.id === song.id && isPlaying ? '⏹ Detener' : '▶ Reproducir'}
-                    </button>
-                    <button
-                      onClick={() => viewPdf(song.pdfUrl)}
-                      className="w-full mt-2 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
-                    >
-                      📄 Ver Letra
-                    <div className="mt-2">
-                      <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} />
-                    </div>
-                    </button>
-                    {isAdmin && (
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          if (confirm('¿Eliminar esta canción?')) {
-                            alert('Función en desarrollo')
-                          }
-                        }}
-                        className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
+                        onClick={() => playSong(song)}
+                        className={`flex-1 py-2 rounded-lg transition flex items-center justify-center gap-2 ${
+                          currentSong?.id === song.id && isPlaying
+                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
                       >
-                        🗑 Eliminar
+                        {currentSong?.id === song.id && isPlaying ? '⏹ Detener' : '▶ Reproducir'}
                       </button>
-                    )}
+                      <button
+                        onClick={() => viewPdf(song.pdfUrl, song.title)}
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
+                      >
+                        📄 Ver Letra
+                      </button>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} />
+                      {isAdmin && (
+                        <button
+                          onClick={() => {
+                            if (confirm('¿Eliminar esta canción?')) {
+                              alert('Función en desarrollo')
+                            }
+                          }}
+                          className="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 rounded-lg text-sm transition"
+                        >
+                          🗑 Eliminar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -360,10 +339,15 @@ export default function GenrePage() {
                 <span className="text-sm">🔊</span>
                 <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} className="w-24 h-1 bg-gray-600 rounded-lg accent-blue-500" />
               </div>
-              <button onClick={() => viewPdf(currentSong.pdfUrl)} className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition">📄 Ver Letra</button>
+              <button onClick={() => viewPdf(currentSong.pdfUrl, currentSong.title)} className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded-full text-sm transition">📄 Ver Letra</button>
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Modal PDF con botón de regreso */}
+      {showPdf && (
+        <PdfViewerModal pdfUrl={showPdf.url} title={showPdf.title} onClose={closePdf} />
       )}
     </div>
   )
