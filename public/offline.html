@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MUSIC - Offline</title>
+  <style>
+    body {
+      font-family: system-ui;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .container { padding: 20px; }
+    .icon { font-size: 80px; margin-bottom: 20px; }
+    h1 { font-size: 24px; margin-bottom: 10px; }
+    p { color: #aaa; margin-bottom: 20px; }
+    button {
+      background: #4f46e5;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🎵</div>
+    <h1>Sin conexión</h1>
+    <p>Conéctate a internet para cargar las canciones.<br>Las canciones descargadas estarán disponibles cuando vuelvas a abrir la app.</p>
+    <button onclick="location.reload()">Reintentar</button>
+  </div>
+</body>
+</html>
