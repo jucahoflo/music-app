@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Datos estáticos de canciones
 const songsData: Record<string, any[]> = {
   salsa: [
     { id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/mp3/EL_PRESO.mp3', pdfUrl: '/pdf/EL_PRESO.pdf' },
