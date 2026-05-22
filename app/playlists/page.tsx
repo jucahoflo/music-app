@@ -143,7 +143,7 @@ export default function PlaylistsPage() {
     
     globalAudio = audio
     
-    // Abrir PDF en modal
+    // Abrir PDF en modal (con botón de regreso)
     if (song.pdfUrl && song.pdfUrl !== '#') {
       setShowPdf({ url: song.pdfUrl, title: song.title })
     }
@@ -245,8 +245,10 @@ export default function PlaylistsPage() {
                             </button>
                             <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} genre={song.genreName} />
                           </div>
-                        </td>
-                      </tr>
+                         </button>
+                       </div>
+                      </td>
+                     </tr>
                     ))}
                   </tbody>
                 </table>
