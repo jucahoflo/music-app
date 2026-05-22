@@ -18,7 +18,6 @@ interface Song {
 }
 
 let globalAudio: HTMLAudioElement | null = null
-let globalPdfWindow: Window | null = null
 
 export default function PlaylistsPage() {
   const [songs, setSongs] = useState<Song[]>([])
@@ -144,7 +143,6 @@ export default function PlaylistsPage() {
     
     globalAudio = audio
     
-    // Abrir PDF en modal
     if (song.pdfUrl && song.pdfUrl !== '#') {
       setShowPdf({ url: song.pdfUrl, title: song.title })
     }
@@ -246,20 +244,17 @@ export default function PlaylistsPage() {
                             </button>
                             <DownloadButton mp3Url={song.mp3Url} pdfUrl={song.pdfUrl} title={song.title} genre={song.genreName} />
                           </div>
-                         </div>
-                       </button>
-                       </div>
-                     </td>
-                   </tr>
-                 ))}
-                </tbody>
-              </table>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
       </div>
       
-      {/* Reproductor flotante */}
       {currentSong && isPlaying && (
         <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-4 shadow-2xl z-50 border-t border-blue-500/30">
           <div className="container mx-auto">
@@ -295,7 +290,6 @@ export default function PlaylistsPage() {
         </div>
       )}
       
-      {/* Modal PDF con botón de regreso */}
       {showPdf && (
         <PdfViewerModal pdfUrl={showPdf.url} title={showPdf.title} onClose={closePdf} />
       )}
