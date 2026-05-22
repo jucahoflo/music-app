@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
-import path from 'next/server';
+import path from 'path';
 
-// Leer el archivo de canciones y contar por género
+// Función para contar canciones en el archivo de datos
 function getSongCounts(): Record<string, number> {
   const counts: Record<string, number> = {
     salsa: 0, bailables: 0, merengues: 0, balada: 0, pop: 0,
