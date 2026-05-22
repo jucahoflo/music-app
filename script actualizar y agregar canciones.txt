@@ -1,0 +1,2 @@
+cd ~/Documents/MUSIC
+./agregar-cancion.sh
