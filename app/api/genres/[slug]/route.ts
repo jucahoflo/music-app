@@ -20,8 +20,9 @@ const songsData: Record<string, any[]> = {
   bachata: [],
   ranchera: [],
   bolero: [],
-  madres: [],
-    { id: '14', title: 'MAMA_VIEJA', artist: 'viscontis', duration: '4:14', mp3Url: '/mp3/MAMA_VIEJA.mp3', pdfUrl: '/pdf/MAMA_VIEJA.pdf' },
+  madres: [
+    { id: '14', title: 'MAMA_VIEJA', artist: 'viscontis', duration: '4:14', mp3Url: '/mp3/MAMA_VIEJA.mp3', pdfUrl: '/pdf/MAMA_VIEJA.pdf' }
+  ],
   padre: [],
   religiosa: [],
   'agropecuaria-popular': []
