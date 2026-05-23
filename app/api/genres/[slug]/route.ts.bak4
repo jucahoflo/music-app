@@ -20,8 +20,7 @@ const songsData: Record<string, any[]> = {
   bachata: [],
   ranchera: [],
   bolero: [],
-  madres: [
-    { id: '1779569376', title: 'A_LA_SOMBRA_DE_MI_MADRE', artist: 'leo dan', duration: '2:48', mp3Url: '/mp3/A_LA_SOMBRA_DE_MI_MADRE.mp3', pdfUrl: '/pdf/A_LA_SOMBRA_DE_MI_MADRE.pdf' },
+  madres: [],
     { id: '14', title: 'MAMA_VIEJA', artist: 'viscontis', duration: '4:14', mp3Url: '/mp3/MAMA_VIEJA.mp3', pdfUrl: '/pdf/MAMA_VIEJA.pdf' }
   ],
   padre: [],
