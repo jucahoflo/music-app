@@ -32,6 +32,7 @@ const songsData: Record<string, any[]> = {
   ],
   padre: [],
   religiosa: [],
+    { id: '1779571676', title: 'LEVANTO_MIS_MANOS', artist: 'samuel hernandez', duration: '5:15', mp3Url: '/mp3/LEVANTO_MIS_MANOS.mp3', pdfUrl: '/pdf/LEVANTO_MIS_MANOS.pdf' },
   'agropecuaria-popular': []
 };
 
