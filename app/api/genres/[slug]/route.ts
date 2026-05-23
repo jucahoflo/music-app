@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 const songsData: Record<string, any[]> = {
   salsa: [
+    { id: '1779569980', title: 'LEVANTO_MIS_MANOS', artist: 'samuel hernandez', duration: '5:15', mp3Url: '/mp3/LEVANTO_MIS_MANOS.mp3', pdfUrl: '/pdf/LEVANTO_MIS_MANOS.pdf' },
     { id: '1', title: 'EL PRESO', artist: 'FRUKO', duration: '4:30', mp3Url: '/mp3/EL_PRESO.mp3', pdfUrl: '/pdf/EL_PRESO.pdf' },
     { id: '4', title: 'ANA MILE', artist: 'GRUPO NICHE', duration: '4:15', mp3Url: '/mp3/ANA_MILE.mp3', pdfUrl: '/pdf/ANA_MILE.pdf' }
   ],
