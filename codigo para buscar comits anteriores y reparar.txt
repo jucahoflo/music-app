@@ -1,0 +1,15 @@
+
+
+
+$ cd ~/Documents/MUSIC
+
+# Ver los commits recientes para identificar el bueno
+git log --oneline -10
+
+
+
+
+cd ~/Documents/MUSIC
+
+# Restaurar el archivo desde ese commit
+git checkout b47f009 -- app/api/genres/[slug]/route.ts

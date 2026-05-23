@@ -1,0 +1,18 @@
+nano app/api/genres/[slug]/route.ts
+
+
+buscar la linea donde esta la cancion y borras
+
+ejemplo salsa: [
+  { id: '1', title: 'EL PRESO', ... },
+  { id: '14', title: 'MAMA_VIEJA', ... }  // ← Elimina esta línea
+],
+
+guardas control + o
+salir control + x
+
+despues
+
+git add .
+git commit -m "Eliminar canción duplicada/errónea"
+git push origin railway-clean
