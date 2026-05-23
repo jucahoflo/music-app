@@ -21,6 +21,7 @@ const songsData: Record<string, any[]> = {
   ranchera: [],
   bolero: [],
   madres: [],
+    { id: '14', title: 'MAMA_VIEJA', artist: 'viscontis', duration: '4:14', mp3Url: '/mp3/MAMA_VIEJA.mp3', pdfUrl: '/pdf/MAMA_VIEJA.pdf' },
   padre: [],
   religiosa: [],
   'agropecuaria-popular': []
