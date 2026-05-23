@@ -21,6 +21,7 @@ const songsData: Record<string, any[]> = {
   ranchera: [],
   bolero: [],
   madres: [
+    { id: '1779569588', title: 'AUNQUE_SEA_MAYO', artist: 'gabriel arriaga', duration: '3:20', mp3Url: '/mp3/AUNQUE_SEA_MAYO.mp3', pdfUrl: '/pdf/AUNQUE_SEA_MAYO.pdf' },
     { id: '1779569376', title: 'A_LA_SOMBRA_DE_MI_MADRE', artist: 'leo dan', duration: '2:48', mp3Url: '/mp3/A_LA_SOMBRA_DE_MI_MADRE.mp3', pdfUrl: '/pdf/A_LA_SOMBRA_DE_MI_MADRE.pdf' },
     { id: '14', title: 'MAMA_VIEJA', artist: 'viscontis', duration: '4:14', mp3Url: '/mp3/MAMA_VIEJA.mp3', pdfUrl: '/pdf/MAMA_VIEJA.pdf' }
   ],
