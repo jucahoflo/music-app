@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import SearchBar from '@/components/SearchBar'
+import SearchBar from './SearchBar'
 
 export default function Menu() {
   const pathname = usePathname()
@@ -10,8 +10,8 @@ export default function Menu() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState({ username: 'Invitado', role: 'user', isAdmin: false })
 
-  // Leer las cookies directamente al cargar el menú
   useEffect(() => {
+    // Leer las cookies que guarda el login
     const getCookie = (name: string) => {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
@@ -29,8 +29,7 @@ export default function Menu() {
     }
   }, [])
 
-  const handleLogout = async () => {
-    // Borrar cookies manualmente
+  const handleLogout = () => {
     document.cookie = "user-role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     router.push('/login')
@@ -66,31 +65,26 @@ export default function Menu() {
           
           <div className="space-y-2">
             <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition" onClick={() => setIsOpen(false)}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-              Inicio
+              <span>🏠</span> Inicio
             </Link>
             
             <Link href="/playlists" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white transition" onClick={() => setIsOpen(false)}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
-              Listas
+              <span>📋</span> Listas
             </Link>
             
             <Link href="/playlist" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-pink-600 text-white hover:bg-pink-700 transition" onClick={() => setIsOpen(false)}>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-              Mi Playlist
+              <span>🎧</span> Mi Playlist
             </Link>
             
-            {/* OPCIONES SOLO PARA ADMIN */}
+            {/* ESTO SOLO APARECE SI ES ADMIN */}
             {user.isAdmin && (
               <>
                 <Link href="/upload" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition" onClick={() => setIsOpen(false)}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                  Subir Canción
+                  <span>📤</span> Subir Canción
                 </Link>
                 
                 <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition" onClick={() => setIsOpen(false)}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                  Administrador
+                  <span>👑</span> Administrador
                 </Link>
               </>
             )}
