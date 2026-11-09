@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import SearchBar from './SearchBar'
+import SearchBar from '@/components/SearchBar'
 
 export default function Menu() {
   const pathname = usePathname()
