@@ -1,0 +1,6 @@
+# 1. Coloca tus archivos en las carpetas
+cp ~/Downloads/mi-cancion.mp3 ~/MUSIC_SYNC/mp3/
+cp ~/Downloads/mi-letra.pdf ~/MUSIC_SYNC/pdf/
+
+# 2. Ejecuta el script
+./sync-music.sh
